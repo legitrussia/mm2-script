@@ -4,17 +4,15 @@ local RunService = game:GetService("RunService")
 local LP = Players.LocalPlayer
 local roles
 
--- > Functions <--
-
-function CreateHighlight() -- make any new highlights for new players
+function CreateHighlight()
     for i, v in pairs(Players:GetChildren()) do
         if v ~= LP and v.Character and not v.Character:FindFirstChild("Highlight") then
-            Instance.new("Highlight", v.Character)
+            Instance.new("Highlight", v.Character)           
         end
     end
 end
 
-function UpdateHighlights() -- Get Current Role Colors (messy)
+function UpdateHighlights()
     for _, v in pairs(Players:GetChildren()) do
         if v ~= LP and v.Character and v.Character:FindFirstChild("Highlight") then
             Highlight = v.Character:FindFirstChild("Highlight")
@@ -31,7 +29,7 @@ function UpdateHighlights() -- Get Current Role Colors (messy)
     end
 end
 
-function IsAlive(Player) -- Simple sexy function
+function IsAlive(Player)
     for i, v in pairs(roles) do
         if Player.Name == i then
             if not v.Killed and not v.Dead then
@@ -43,48 +41,17 @@ function IsAlive(Player) -- Simple sexy function
     end
 end
 
--- > Variables to control the ESP state <--
-local espConnection
-local espEnabled = false
-
-function activateGlow()
-    if not espEnabled then
-        espEnabled = true
-        espConnection = RunService.RenderStepped:Connect(function()
-            roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
-            for i, v in pairs(roles) do
-                if v.Role == "Murderer" then
-                    Murder = i
-                elseif v.Role == 'Sheriff'then
-                    Sheriff = i
-                elseif v.Role == 'Hero'then
-                    Hero = i
-                end
-            end
-            CreateHighlight()
-            UpdateHighlights()
-        end)
-        print("ESP Glow activated")
-    end
-end
-
-function deactivateGlow()
-    if espEnabled then
-        espEnabled = false
-        if espConnection then
-            espConnection:Disconnect()
-            espConnection = nil
+RunService.RenderStepped:connect(function()
+    roles = ReplicatedStorage:FindFirstChild("GetPlayerData", true):InvokeServer()
+    for i, v in pairs(roles) do
+        if v.Role == "Murderer" then
+            Murder = i
+        elseif v.Role == 'Sheriff'then
+            Sheriff = i
+        elseif v.Role == 'Hero'then
+            Hero = i
         end
-        for _, v in pairs(Players:GetChildren()) do
-            if v.Character and v.Character:FindFirstChild("Highlight") then
-                v.Character.Highlight:Destroy()
-            end
-        end
-        print("ESP Glow deactivated")
     end
-end
-
-return {
-    activateGlow = activateGlow,
-    deactivateGlow = deactivateGlow
-}
+    CreateHighlight()
+    UpdateHighlights()
+end)
