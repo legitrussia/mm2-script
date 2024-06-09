@@ -5,11 +5,12 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Holding = false
+local AimbotConnection = nil
 
-_G.AimbotEnabled = false -- Inicialmente desativado
-_G.TeamCheck = false -- Se verdadeiro, o aimbot só irá travar em membros do time inimigo
-_G.AimPart = "Head" -- Parte do corpo onde o aimbot irá travar
-_G.Sensitivity = 0 -- Sensibilidade do aimbot
+_G.AimbotEnabled = false
+_G.TeamCheck = false
+_G.AimPart = "Head"
+_G.Sensitivity = 0
 
 local function GetClosestPlayer()
     local MaximumDistance = math.huge
@@ -17,7 +18,7 @@ local function GetClosestPlayer()
     
     coroutine.wrap(function()
         wait(20)
-        MaximumDistance = math.huge -- Reseta a distância máxima
+        MaximumDistance = math.huge
     end)()
 
     for _, v in next, Players:GetPlayers() do
@@ -71,21 +72,31 @@ UserInputService.InputEnded:Connect(function(Input)
     end
 end)
 
-RunService.RenderStepped:Connect(function()
-    if Holding == true and _G.AimbotEnabled == true then
-        local ClosestPlayer = GetClosestPlayer()
-        if ClosestPlayer then
-            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, ClosestPlayer.Character[_G.AimPart].Position)}):Play()
-        end
+local function ActivateAimbot()
+    if not _G.AimbotEnabled then
+        AimbotConnection = RunService.RenderStepped:Connect(function()
+            if Holding == true and _G.AimbotEnabled == true then
+                local ClosestPlayer = GetClosestPlayer()
+                if ClosestPlayer then
+                    TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, ClosestPlayer.Character[_G.AimPart].Position)}):Play()
+                end
+            end
+        end)
     end
-end)
+end
 
--- Função para alternar o estado do aimbot
-local function ToggleAimbot(value)
-    _G.AimbotEnabled = value
+local function DeactivateAimbot()
+    if _G.AimbotEnabled and AimbotConnection then
+        AimbotConnection:Disconnect()
+    end
 end
 
 -- Adicionando a checkbox no menu para ativar/desativar o aimbot
 local Toggle1 = Tab1:NewToggle("Aimbot", false, function(value)
-    ToggleAimbot(value)
+    _G.AimbotEnabled = value
+    if value then
+        ActivateAimbot()
+    else
+        DeactivateAimbot()
+    end
 end)
