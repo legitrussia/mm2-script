@@ -1,288 +1,100 @@
-local PLAYER = game.Players.LocalPlayer
-local MOUSE = PLAYER:GetMouse()
-local CC = game.Workspace.CurrentCamera
+local Camera = workspace.CurrentCamera
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Holding = false
 
-local ENABLED = false
-local AIM_PART = 'Head'
-local SMOOTHING = 1  -- Ajuste inicial de suavização
+_G.AimbotEnabled = true
+_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
+_G.AimPart = "Head" -- Where the aimbot script would lock at.
+_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
 
--- Configurações da interface gráfica
-local GUI_MAIN = Instance.new('ScreenGui', game.CoreGui)
-local GUI_TARGET = Instance.new('TextLabel', GUI_MAIN)
-local GUI_AIM_AT = Instance.new('TextLabel', GUI_MAIN)
+_G.CircleSides = 64 -- How many sides the FOV circle would have.
+_G.CircleColor = Color3.fromRGB(255, 255, 255) -- (RGB) Color that the FOV circle would appear as.
+_G.CircleTransparency = 0.7 -- Transparency of the circle.
+_G.CircleRadius = 80 -- The radius of the circle / FOV.
+_G.CircleFilled = false -- Determines whether or not the circle is filled.
+_G.CircleVisible = true -- Determines whether or not the circle is visible.
+_G.CircleThickness = 0 -- The thickness of the circle.
 
-GUI_MAIN.Name = 'AIMBOT'
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+FOVCircle.Radius = _G.CircleRadius
+FOVCircle.Filled = _G.CircleFilled
+FOVCircle.Color = _G.CircleColor
+FOVCircle.Visible = _G.CircleVisible
+FOVCircle.Radius = _G.CircleRadius
+FOVCircle.Transparency = _G.CircleTransparency
+FOVCircle.NumSides = _G.CircleSides
+FOVCircle.Thickness = _G.CircleThickness
 
-GUI_TARGET.Size = UDim2.new(0, 200, 0, 30)
-GUI_TARGET.BackgroundTransparency = 0.5
-GUI_TARGET.BackgroundColor3 = Color3.fromRGB(69, 69, 69)
-GUI_TARGET.BorderSizePixel = 0
-GUI_TARGET.Position = UDim2.new(0.5, -100, 0, 0)
-GUI_TARGET.Text = 'AIMBOT : OFF'
-GUI_TARGET.TextColor3 = Color3.new(1, 1, 1)
-GUI_TARGET.TextWrapped = true
-GUI_TARGET.Font = Enum.Font.SourceSansBold
-GUI_TARGET.TextSize = 24
+local function GetClosestPlayer()
+	local MaximumDistance = _G.CircleRadius
+	local Target = nil
 
-GUI_AIM_AT.Size = UDim2.new(0, 200, 0, 20)
-GUI_AIM_AT.BackgroundTransparency = 0.5
-GUI_AIM_AT.BackgroundColor3 = Color3.fromRGB(69, 69, 69)
-GUI_AIM_AT.BorderSizePixel = 0
-GUI_AIM_AT.Position = UDim2.new(0.5, -100, 0, 30)
-GUI_AIM_AT.Text = 'AIMING : HEAD'
-GUI_AIM_AT.TextColor3 = Color3.new(1, 1, 1)
-GUI_AIM_AT.TextWrapped = true
-GUI_AIM_AT.Font = Enum.Font.SourceSansBold
-GUI_AIM_AT.TextSize = 18
+	for _, v in next, Players:GetPlayers() do
+		if v.Name ~= LocalPlayer.Name then
+			if _G.TeamCheck == true then
+				if v.Team ~= LocalPlayer.Team then
+					if v.Character ~= nil then
+						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+								
+								if VectorDistance < MaximumDistance then
+									Target = v
+								end
+							end
+						end
+					end
+				end
+			else
+				if v.Character ~= nil then
+					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+							
+							if VectorDistance < MaximumDistance then
+								Target = v
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 
--- Função para verificar se o jogador está equipado com uma arma
-local function IsEquippedWithWeapon()
-    local character = PLAYER.Character
-    if character then
-        for _, tool in pairs(character:GetChildren()) do
-            if tool:IsA("Tool") then
-                return true
-            end
-        end
-    end
-    return false
+	return Target
 end
 
--- Função para encontrar o jogador mais próximo ao cursor do mouse
-local function GetNearestPlayerToMouse()
-    local players = game.Players:GetPlayers()
-    local nearestPlayer = nil
-    local shortestDistance = math.huge
-
-    for _, v in pairs(players) do
-        if v ~= PLAYER and v.Character and v.Character:FindFirstChild(AIM_PART) then
-            local aimPart = v.Character[AIM_PART]
-            local screenPoint = CC:WorldToViewportPoint(aimPart.Position)
-            local mouseDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(MOUSE.X, MOUSE.Y)).magnitude
-
-            if mouseDistance < shortestDistance then
-                shortestDistance = mouseDistance
-                nearestPlayer = v
-            end
-        end
-    end
-
-    if shortestDistance > 300 then  -- Ajuste a distância máxima conforme necessário
-        return nil
-    end
-
-    return nearestPlayer
-end
-
--- Função para mover o mouse suavemente em direção ao alvo
-local PLAYER = game.Players.LocalPlayer
-local MOUSE = PLAYER:GetMouse()
-local CC = game.Workspace.CurrentCamera
-
-local ENABLED = false
-local AIM_PART = 'Head'
-local SMOOTHING = 1  -- Ajuste inicial de suavização
-
--- Configurações da interface gráfica
-local GUI_MAIN = Instance.new('ScreenGui', game.CoreGui)
-local GUI_TARGET = Instance.new('TextLabel', GUI_MAIN)
-local GUI_AIM_AT = Instance.new('TextLabel', GUI_MAIN)
-
-GUI_MAIN.Name = 'AIMBOT'
-
-GUI_TARGET.Size = UDim2.new(0, 200, 0, 30)
-GUI_TARGET.BackgroundTransparency = 0.5
-GUI_TARGET.BackgroundColor3 = Color3.fromRGB(69, 69, 69)
-GUI_TARGET.BorderSizePixel = 0
-GUI_TARGET.Position = UDim2.new(0.5, -100, 0, 0)
-GUI_TARGET.Text = 'AIMBOT : OFF'
-GUI_TARGET.TextColor3 = Color3.new(1, 1, 1)
-GUI_TARGET.TextWrapped = true
-GUI_TARGET.Font = Enum.Font.SourceSansBold
-GUI_TARGET.TextSize = 24
-
-GUI_AIM_AT.Size = UDim2.new(0, 200, 0, 20)
-GUI_AIM_AT.BackgroundTransparency = 0.5
-GUI_AIM_AT.BackgroundColor3 = Color3.fromRGB(69, 69, 69)
-GUI_AIM_AT.BorderSizePixel = 0
-GUI_AIM_AT.Position = UDim2.new(0.5, -100, 0, 30)
-GUI_AIM_AT.Text = 'AIMING : HEAD'
-GUI_AIM_AT.TextColor3 = Color3.new(1, 1, 1)
-GUI_AIM_AT.TextWrapped = true
-GUI_AIM_AT.Font = Enum.Font.SourceSansBold
-GUI_AIM_AT.TextSize = 18
-
--- Função para verificar se o jogador está equipado com uma arma
-local function IsEquippedWithWeapon()
-    local character = PLAYER.Character
-    if character then
-        for _, tool in pairs(character:GetChildren()) do
-            if tool:IsA("Tool") then
-                return true
-            end
-        end
-    end
-    return false
-end
-
--- Função para encontrar o jogador mais próximo ao cursor do mouse
-local function GetNearestPlayerToMouse()
-    local players = game.Players:GetPlayers()
-    local nearestPlayer = nil
-    local shortestDistance = math.huge
-
-    for _, v in pairs(players) do
-        if v ~= PLAYER and v.Character and v.Character:FindFirstChild(AIM_PART) then
-            local aimPart = v.Character[AIM_PART]
-            local screenPoint = CC:WorldToViewportPoint(aimPart.Position)
-            local mouseDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(MOUSE.X, MOUSE.Y)).magnitude
-
-            if mouseDistance < shortestDistance then
-                shortestDistance = mouseDistance
-                nearestPlayer = v
-            end
-        end
-    end
-
-    if shortestDistance > 300 then  -- Ajuste a distância máxima conforme necessário
-        return nil
-    end
-
-    return nearestPlayer
-end
-
--- Função para mover o mouse suavemente em direção ao alvo
-local PLAYER = game.Players.LocalPlayer
-local MOUSE = PLAYER:GetMouse()
-local CC = game.Workspace.CurrentCamera
-
-local ENABLED = false
-local AIM_PART = 'Head'
-local SMOOTHING = 1  -- Ajuste inicial de suavização
-
--- Configurações da interface gráfica
-local GUI_MAIN = Instance.new('ScreenGui', game.CoreGui)
-local GUI_TARGET = Instance.new('TextLabel', GUI_MAIN)
-local GUI_AIM_AT = Instance.new('TextLabel', GUI_MAIN)
-
-GUI_MAIN.Name = 'AIMBOT'
-
-GUI_TARGET.Size = UDim2.new(0, 200, 0, 30)
-GUI_TARGET.BackgroundTransparency = 0.5
-GUI_TARGET.BackgroundColor3 = Color3.fromRGB(69, 69, 69)
-GUI_TARGET.BorderSizePixel = 0
-GUI_TARGET.Position = UDim2.new(0.5, -100, 0, 0)
-GUI_TARGET.Text = 'AIMBOT : OFF'
-GUI_TARGET.TextColor3 = Color3.new(1, 1, 1)
-GUI_TARGET.TextWrapped = true
-GUI_TARGET.Font = Enum.Font.SourceSansBold
-GUI_TARGET.TextSize = 24
-
-GUI_AIM_AT.Size = UDim2.new(0, 200, 0, 20)
-GUI_AIM_AT.BackgroundTransparency = 0.5
-GUI_AIM_AT.BackgroundColor3 = Color3.fromRGB(69, 69, 69)
-GUI_AIM_AT.BorderSizePixel = 0
-GUI_AIM_AT.Position = UDim2.new(0.5, -100, 0, 30)
-GUI_AIM_AT.Text = 'AIMING : HEAD'
-GUI_AIM_AT.TextColor3 = Color3.new(1, 1, 1)
-GUI_AIM_AT.TextWrapped = true
-GUI_AIM_AT.Font = Enum.Font.SourceSansBold
-GUI_AIM_AT.TextSize = 18
-
--- Função para verificar se o jogador está equipado com uma arma
-local function IsEquippedWithWeapon()
-    local character = PLAYER.Character
-    if character then
-        for _, tool in pairs(character:GetChildren()) do
-            if tool:IsA("Tool") then
-                return true
-            end
-        end
-    end
-    return false
-end
-
--- Função para encontrar o jogador mais próximo ao cursor do mouse
-local function GetNearestPlayerToMouse()
-    local players = game.Players:GetPlayers()
-    local nearestPlayer = nil
-    local shortestDistance = math.huge
-
-    for _, v in pairs(players) do
-        if v ~= PLAYER and v.Character and v.Character:FindFirstChild(AIM_PART) then
-            local aimPart = v.Character[AIM_PART]
-            local screenPoint = CC:WorldToViewportPoint(aimPart.Position)
-            local mouseDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(MOUSE.X, MOUSE.Y)).magnitude
-
-            if mouseDistance < shortestDistance then
-                shortestDistance = mouseDistance
-                nearestPlayer = v
-            end
-        end
-    end
-
-    if shortestDistance > 300 then  -- Ajuste a distância máxima conforme necessário
-        return nil
-    end
-
-    return nearestPlayer
-end
-
--- Função para mover o mouse suavemente em direção ao alvo
-local function MoveMouseToTarget(targetPosition)
-    local userInputService = game:GetService("UserInputService")
-    local mouseLocation = userInputService:GetMouseLocation()
-    local screenTargetPos = CC:WorldToViewportPoint(targetPosition)
-
-    local targetVector = Vector2.new(screenTargetPos.X, screenTargetPos.Y)
-    local currentVector = Vector2.new(mouseLocation.X, mouseLocation.Y)
-    local moveVector = (targetVector - currentVector) / (11 - SMOOTHING)  -- Ajustar suavização com base no valor do slider
-
-    for i = 1, 11 - SMOOTHING do
-        local newPos = currentVector + moveVector * i
-        mousemoverel(newPos.X - currentVector.X, newPos.Y - currentVector.Y)
-        wait(0.03)  -- Ajuste conforme necessário para a suavidade do movimento
-    end
-end
-
--- Configuração dos eventos do mouse
-MOUSE.Button2Down:Connect(function()
-    if IsEquippedWithWeapon() then
-        ENABLED = true
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = true
     end
 end)
 
-MOUSE.Button2Up:Connect(function()
-    ENABLED = false
-end)
-
-MOUSE.KeyDown:Connect(function(KEY)
-    if KEY == string.byte('q') then
-        if AIM_PART == 'Head' then
-            AIM_PART = 'Neck'
-            GUI_AIM_AT.Text = 'AIMING : NECK'
-        elseif AIM_PART == 'Neck' then
-            AIM_PART = 'Torso'
-            GUI_AIM_AT.Text = 'AIMING : TORSO'
-        elseif AIM_PART == 'Torso' then
-            AIM_PART = 'Head'
-            GUI_AIM_AT.Text = 'AIMING : HEAD'
-        end
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = false
     end
 end)
 
--- Loop principal do aimbot
-game:GetService('RunService').RenderStepped:Connect(function()
-    if ENABLED then
-        local TARGET = GetNearestPlayerToMouse()
-        if TARGET then
-            local AIM = TARGET.Character:FindFirstChild(AIM_PART)
-            if AIM then
-                MoveMouseToTarget(AIM.Position)
-                GUI_TARGET.Text = 'AIMBOT : '.. TARGET.Name:sub(1, 5)
-            end
-        else
-            GUI_TARGET.Text = 'AIMBOT : OFF'
-        end
+RunService.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    FOVCircle.Radius = _G.CircleRadius
+    FOVCircle.Filled = _G.CircleFilled
+    FOVCircle.Color = _G.CircleColor
+    FOVCircle.Visible = _G.CircleVisible
+    FOVCircle.Radius = _G.CircleRadius
+    FOVCircle.Transparency = _G.CircleTransparency
+    FOVCircle.NumSides = _G.CircleSides
+    FOVCircle.Thickness = _G.CircleThickness
+
+    if Holding == true and _G.AimbotEnabled == true then
+        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
     end
 end)
