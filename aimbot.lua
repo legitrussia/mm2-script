@@ -40,8 +40,8 @@ local function GetClosestPlayer()
 					if v.Character ~= nil then
 						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
 							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-								local VectorDistance = (Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+								local ScreenPoint = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
+								local VectorDistance = (ScreenPoint - FOVCircle.Position).Magnitude
 								
 								if VectorDistance < MaximumDistance then
 									Target = v
@@ -54,8 +54,8 @@ local function GetClosestPlayer()
 				if v.Character ~= nil then
 					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
 						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-							local VectorDistance = (Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+							local ScreenPoint = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
+							local VectorDistance = (ScreenPoint - FOVCircle.Position).Magnitude
 							
 							if VectorDistance < MaximumDistance then
 								Target = v
@@ -97,11 +97,10 @@ RunService.RenderStepped:Connect(function()
         local target = GetClosestPlayer()
         if target then
             local targetPosition = target.Character[_G.AimPart].Position
-            local mousePosition = UserInputService.MousePosition
-            local direction = (targetPosition - Camera.CFrame.p).unit
-            local angle = math.atan2(mousePosition.Y - UserInputService.MouseDelta.Y, mousePosition.X - UserInputService.MouseDelta.X)
-            local finalPosition = Vector2.new(UserInputService.MouseDelta.X + math.cos(angle) * 100, UserInputService.MouseDelta.Y + math.sin(angle) * 100)
-            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + direction)}):Play()
+            local direction = (Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y) - FOVCircle.Position).unit
+            local angle = math.atan2(direction.Y, direction.X)
+            local finalPosition = Vector2.new(FOVCircle.Position.X + math.cos(angle) * 100, FOVCircle.Position.Y + math.sin(angle) * 100)
+            TweenService:Create(FOVCircle, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Position = finalPosition}):Play()
         end
     end
 end)
