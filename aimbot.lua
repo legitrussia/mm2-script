@@ -93,3 +93,16 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         _G.AimbotEnabled = false
     end
+end)
+
+-- Loop para atualizar o círculo FOV
+RunService.RenderStepped:Connect(function()
+    if FOV_CIRCLE.Visible then
+        FOV_CIRCLE.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    end
+
+    if _G.AimbotEnabled then
+        local target = GetClosestPlayer()
+        AimAt(target)
+    end
+end)
