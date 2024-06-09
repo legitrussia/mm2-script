@@ -6,77 +6,72 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Holding = false
 
-local aimbotEnabled = false
-local teamCheck = false -- Se definido como true, o script só bloqueará sua mira em membros do time inimigo.
-local aimPart = "Head" -- Onde o script de aimbot bloqueará.
-local sensitivity = 0 -- Quantos segundos o script de aimbot levará para travar oficialmente no aimpart do alvo.
+_G.AimbotEnabled = true
+_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
+_G.AimPart = "Head" -- Where the aimbot script would lock at.
+_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
 
 local function GetClosestPlayer()
-    local maximumDistance = math.huge
-    local target = nil
+	local MaximumDistance = math.huge
+	local Target = nil
   
-    coroutine.wrap(function()
-        wait(20)
-        maximumDistance = math.huge -- Reseta a distância máxima para que o Aimbot não a considere como uma variável muito pequena e pare de capturar jogadores...
-    end)()
+  	coroutine.wrap(function()
+    		wait(20); MaximumDistance = math.huge -- Reset the MaximumDistance so that the Aimbot doesn't remember it as a very small variable and stop capturing players...
+  	end)()
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            if teamCheck then
-                if player.Team ~= LocalPlayer.Team then
-                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                        local screenPoint = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
-                        local vectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
-                                
-                        if vectorDistance < maximumDistance then
-                            target = player
-                            maximumDistance = vectorDistance
-                        end
-                    end
-                end
-            else
-                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
-                    local screenPoint = Camera:WorldToScreenPoint(player.Character.HumanoidRootPart.Position)
-                    local vectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(screenPoint.X, screenPoint.Y)).Magnitude
-                            
-                    if vectorDistance < maximumDistance then
-                        target = player
-                        maximumDistance = vectorDistance
-                    end
-                end
-            end
-        end
-    end
+	for _, v in next, Players:GetPlayers() do
+		if v.Name ~= LocalPlayer.Name then
+			if _G.TeamCheck == true then
+				if v.Team ~= LocalPlayer.Team then
+					if v.Character ~= nil then
+						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+								
+								if VectorDistance < MaximumDistance then
+									Target = v
+                  							MaximumDistance = VectorDistance
+								end
+							end
+						end
+					end
+				end
+			else
+				if v.Character ~= nil then
+					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+							
+							if VectorDistance < MaximumDistance then
+								Target = v
+               							MaximumDistance = VectorDistance
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 
-    return target
+	return Target
 end
 
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
         Holding = true
     end
 end)
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
         Holding = false
     end
 end)
 
 RunService.RenderStepped:Connect(function()
-    if aimbotEnabled and Holding then
-        local closestPlayer = GetClosestPlayer()
-        if closestPlayer then
-            TweenService:Create(Camera, TweenInfo.new(sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character[aimPart].Position)}):Play()
-        end
+    if Holding == true and _G.AimbotEnabled == true then
+        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
     end
 end)
-
--- Funções para ativar e desativar o aimbot
-local function EnableAimbot()
-    aimbotEnabled = true
-end
-
-local function DisableAimbot()
-    aimbotEnabled = false
-end
