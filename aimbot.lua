@@ -15,9 +15,13 @@ local function MoveMouseToTarget(Target)
         local MousePosition = Mouse.Hit.p
         local AimPartPosition = AimPart.Position
 
-        local MoveVector = (AimPartPosition - MousePosition) * Sensitivity
+        local MoveVector = (AimPartPosition - MousePosition).unit * Sensitivity
 
-        Mousemoverel(MoveVector.X, MoveVector.Y)
+        -- Converter o vetor para deslocamento de mouse
+        local DeltaX = MoveVector.X * 100 -- 100 é um fator de escala para tornar o movimento do mouse mais perceptível
+        local DeltaY = MoveVector.Y * 100
+
+        Mouse.Move:Fire(DeltaX, DeltaY)
     end
 end
 
