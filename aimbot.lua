@@ -54,6 +54,8 @@ local function AimAt(target)
     if target then
         local aimPart = target.Character:FindFirstChild(_G.AimPart)
         if aimPart then
+            local fov = _G.CircleRadius  -- Obtém o valor do FOV do menu
+
             local mousePosition = UserInputService:GetMouseLocation()
             local aimPosition = workspace.CurrentCamera:WorldToScreenPoint(aimPart.Position)
 
