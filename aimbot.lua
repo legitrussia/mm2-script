@@ -62,7 +62,7 @@ local function AimAt(target)
     end
 end
 
--- Ouvintes de evento para o botão direito do mouse
+-- Ouvinte de evento para o botão direito do mouse
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         _G.AimbotEnabled = true
