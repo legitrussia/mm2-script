@@ -54,10 +54,7 @@ local function AimAt(target)
     if target then
         local aimPart = target.Character:FindFirstChild(_G.AimPart)
         if aimPart then
-            local mousePosition = UserInputService:GetMouseLocation()
-            local aimPosition = workspace.CurrentCamera:WorldToScreenPoint(aimPart.Position)
-
-            local moveVector = (Vector2.new(aimPosition.X, aimPosition.Y) - Vector2.new(mousePosition.X, mousePosition.Y)) * _G.Sensitivity
+            local direction = (aimPart.Position - workspace.CurrentCamera.CFrame.p).unit
 
             TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                 CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, aimPart.Position)
@@ -68,6 +65,19 @@ end
 
 -- Aqui você pode definir _G.AimbotEnabled = true para ativar o Aimbot automaticamente ou pode ser ativado por meio de um botão no menu.
 _G.AimbotEnabled = false
+
+-- Ouvintes de evento para o botão direito do mouse
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        _G.AimbotEnabled = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        _G.AimbotEnabled = false
+    end
+end)
 
 -- Loop para atualizar o círculo FOV
 RunService.RenderStepped:Connect(function()
