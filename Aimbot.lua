@@ -75,18 +75,3 @@ RunService.RenderStepped:Connect(function()
         TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
     end
 end)
-
--- Código do menu
-
-local ToggleAimbot = Instance.new("BoolValue")
-ToggleAimbot.Name = "ToggleAimbot"
-ToggleAimbot.Value = _G.AimbotEnabled
-
-local KeybindAimbotToggle = Instance.new("StringValue")
-KeybindAimbotToggle.Name = "KeybindAimbotToggle"
-KeybindAimbotToggle.Value = "RightControl"
-
--- Função para alterar a tecla de toggle de acordo com a entrada do menu
-local function UpdateAimbotToggleKey(key)
-    KeybindAimbotToggle.Value = key.Name
-end
