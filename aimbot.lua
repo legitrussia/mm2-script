@@ -1,68 +1,106 @@
 local Players = game:GetService("Players")
-local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
-local Sensitivity = 1 -- Ajuste a sensibilidade conforme necessário
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Holding = false
 
-local AimbotEnabled = false
+_G.AimbotEnabled = true
+_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
+_G.AimPart = "Head" -- Where the aimbot script would lock at.
+_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
 
-local function GetAimPart(Character)
-    -- Determine qual parte do personagem mirar (cabeça, torso, etc.)
-    return Character:FindFirstChild("Head") or Character:FindFirstChild("UpperTorso") or Character:FindFirstChild("HumanoidRootPart")
+_G.CircleSides = 64 -- How many sides the FOV circle would have.
+_G.CircleColor = Color3.fromRGB(255, 255, 255) -- (RGB) Color that the FOV circle would appear as.
+_G.CircleTransparency = 0.7 -- Transparency of the circle.
+_G.CircleRadius = 80 -- The radius of the circle / FOV.
+_G.CircleFilled = false -- Determines whether or not the circle is filled.
+_G.CircleVisible = true -- Determines whether or not the circle is visible.
+_G.CircleThickness = 0 -- The thickness of the circle.
+
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Position = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
+FOVCircle.Radius = _G.CircleRadius
+FOVCircle.Filled = _G.CircleFilled
+FOVCircle.Color = _G.CircleColor
+FOVCircle.Visible = _G.CircleVisible
+FOVCircle.Radius = _G.CircleRadius
+FOVCircle.Transparency = _G.CircleTransparency
+FOVCircle.NumSides = _G.CircleSides
+FOVCircle.Thickness = _G.CircleThickness
+
+local function GetClosestPlayer()
+	local MaximumDistance = _G.CircleRadius
+	local Target = nil
+
+	for _, v in next, Players:GetPlayers() do
+		if v.Name ~= LocalPlayer.Name then
+			if _G.TeamCheck == true then
+				if v.Team ~= LocalPlayer.Team then
+					if v.Character ~= nil then
+						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+								local ScreenPoint = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
+								local VectorDistance = (ScreenPoint - FOVCircle.Position).Magnitude
+								
+								if VectorDistance < MaximumDistance then
+									Target = v
+								end
+							end
+						end
+					end
+				end
+			else
+				if v.Character ~= nil then
+					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+							local ScreenPoint = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
+							local VectorDistance = (ScreenPoint - FOVCircle.Position).Magnitude
+							
+							if VectorDistance < MaximumDistance then
+								Target = v
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	return Target
 end
 
-local function MoveMouseToTarget(Target)
-    local AimPart = GetAimPart(Target.Character)
-    if AimPart then
-        local MousePosition = Mouse.Hit.p
-        local AimPartPosition = AimPart.Position
-
-        local MoveVector = (AimPartPosition - MousePosition).unit * Sensitivity
-
-        -- Converter o vetor para deslocamento de mouse
-        local DeltaX = MoveVector.X * 100 -- 100 é um fator de escala para tornar o movimento do mouse mais perceptível
-        local DeltaY = MoveVector.Y * 100
-
-        Mouse.Move:Fire(DeltaX, DeltaY)
-    end
-end
-
-local function GetNearestPlayer()
-    local NearestPlayer = nil
-    local ShortestDistance = math.huge
-
-    for _, Player in ipairs(Players:GetPlayers()) do
-        if Player ~= Players.LocalPlayer and Player.Character then
-            local Character = Player.Character
-            local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-            local MousePosition = Mouse.Hit.p
-            local Distance = (MousePosition - HumanoidRootPart.Position).Magnitude
-
-            if Distance < ShortestDistance then
-                NearestPlayer = Player
-                ShortestDistance = Distance
-            end
-        end
-    end
-
-    return NearestPlayer
-end
-
-game:GetService("UserInputService").InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        AimbotEnabled = true
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = true
     end
 end)
 
-game:GetService("UserInputService").InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton2 then
-        AimbotEnabled = false
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = false
     end
 end)
 
-game:GetService("RunService").RenderStepped:Connect(function()
-    if AimbotEnabled then
-        local Target = GetNearestPlayer()
-        if Target then
-            MoveMouseToTarget(Target)
+RunService.RenderStepped:Connect(function()
+    FOVCircle.Position = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
+    FOVCircle.Radius = _G.CircleRadius
+    FOVCircle.Filled = _G.CircleFilled
+    FOVCircle.Color = _G.CircleColor
+    FOVCircle.Visible = _G.CircleVisible
+    FOVCircle.Radius = _G.CircleRadius
+    FOVCircle.Transparency = _G.CircleTransparency
+    FOVCircle.NumSides = _G.CircleSides
+    FOVCircle.Thickness = _G.CircleThickness
+
+    if Holding == true and _G.AimbotEnabled == true then
+        local target = GetClosestPlayer()
+        if target then
+            local targetPosition = target.Character[_G.AimPart].Position
+            local direction = (targetPosition - Camera.CFrame.p).unit
+            local angle = math.atan2(UserInputService.MouseDelta.Y, UserInputService.MouseDelta.X)
+            local finalPosition = Vector2.new(UserInputService.MouseDelta.X + math.cos(angle) * 100, UserInputService.MouseDelta.Y + math.sin(angle) * 100)
+            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + direction)}):Play()
         end
     end
 end)
