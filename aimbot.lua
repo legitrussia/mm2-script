@@ -46,9 +46,10 @@ end
 local function MoveMouseToTarget(Target)
     local AimPart = GetAimPart(Target.Character)
     if AimPart then
-        local ScreenPoint = game.Workspace.CurrentCamera:WorldToScreenPoint(AimPart.Position)
+        local MousePosition = Mouse.Hit.p
+        local AimPartPosition = AimPart.Position
 
-        local MoveVector = (Vector2.new(ScreenPoint.X, ScreenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)) * Sensitivity
+        local MoveVector = (AimPartPosition - MousePosition) * Sensitivity
 
         Mousemoverel(MoveVector.X, MoveVector.Y)
     end
