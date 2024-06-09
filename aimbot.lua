@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
 local FOV_CIRCLE = Drawing.new("Circle")
 FOV_CIRCLE.Color = Color3.new(1, 1, 1)
