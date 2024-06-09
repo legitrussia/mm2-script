@@ -26,14 +26,14 @@ local function createMenu()
     local tab2 = Main:CreateTab("Esp")
     local tab3 = Main:CreateTab("Misc")
 
-local function ToggleAimbot(enabled)
-    _G.AimbotEnabled = enabled
-    print("Aimbot ativado:", enabled)
-    
-    if enabled then
-        loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/aimbot.lua"))()
+    local function ToggleAimbot(enabled)
+        _G.AimbotEnabled = enabled
+        print("Aimbot ativado:", enabled)
+        
+        if enabled then
+            loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/aimbot.lua"))()
+        end
     end
-end
 
     tab:CreateCheckbox("Aimbot", function(state)
         ToggleAimbot(state)
@@ -57,6 +57,7 @@ end
     fovSlider = tab:CreateSlider("FOV", 0, 180, function(value)
         _G.CircleRadius = value
         updateFOVCircle(value)
+        _G.UpdateAimFOV(value)  -- Atualiza o FOV do aimbot quando o valor do menu é alterado
         print("FOV set to:", value)
     end)
 
@@ -69,8 +70,8 @@ end
             print("ESP ativado")
         else
             ESP_ENABLED = false
-            -- Destroy all GUI elements with the name 'ESP'
-            for _, v in pairs(PLAYER.PlayerGui:GetDescendants()) do
+            -- Destrua todos os elementos de GUI com o nome 'ESP'
+            for _, v in pairs(Players.LocalPlayer.PlayerGui:GetDescendants()) do
                 if v.Name == 'ESP' then
                     v:Destroy()
                 end
