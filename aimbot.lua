@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 
 local FOV_CIRCLE = Drawing.new("Circle")
 FOV_CIRCLE.Color = Color3.new(1, 1, 1)
@@ -55,14 +54,22 @@ local function AimAt(target)
     if target then
         local aimPart = target.Character:FindFirstChild(_G.AimPart)
         if aimPart then
-            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.FOV, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+            local mousePosition = UserInputService:GetMouseLocation()
+            local aimPosition = workspace.CurrentCamera:WorldToScreenPoint(aimPart.Position)
+
+            local moveVector = (Vector2.new(aimPosition.X, aimPosition.Y) - Vector2.new(mousePosition.X, mousePosition.Y)) * _G.Sensitivity
+
+            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                 CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, aimPart.Position)
             }):Play()
         end
     end
 end
 
--- Ouvinte de evento para o botão direito do mouse
+-- Aqui você pode definir _G.AimbotEnabled = true para ativar o Aimbot automaticamente ou pode ser ativado por meio de um botão no menu.
+_G.AimbotEnabled = false
+
+-- Ouvintes de evento para o botão direito do mouse
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         _G.AimbotEnabled = true
@@ -85,6 +92,3 @@ RunService.RenderStepped:Connect(function()
         AimAt(GetClosestPlayer())
     end
 end)
-
--- Aqui você pode definir _G.AimbotEnabled = true para ativar o Aimbot automaticamente ou pode ser ativado por meio de um botão no menu.
-_G.AimbotEnabled = false
