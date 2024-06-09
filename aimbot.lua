@@ -1,22 +1,30 @@
--- Services
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local Mouse = game:GetService("Players").LocalPlayer:GetMouse()
+local Sensitivity = 1 -- Ajuste a sensibilidade conforme necessário
 
--- Local variables
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-local AimbotEnabled = false
-local AimPart = "Head"
-local Sensitivity = 0.1
+local function GetAimPart(Character)
+    -- Determine qual parte do personagem mirar (cabeça, torso, etc.)
+    return Character:FindFirstChild("Head") or Character:FindFirstChild("UpperTorso") or Character:FindFirstChild("HumanoidRootPart")
+end
 
--- Functions
+local function MoveMouseToTarget(Target)
+    local AimPart = GetAimPart(Target.Character)
+    if AimPart then
+        local MousePosition = Mouse.Hit.p
+        local AimPartPosition = AimPart.Position
+
+        local MoveVector = (AimPartPosition - MousePosition) * Sensitivity
+
+        Mousemoverel(MoveVector.X, MoveVector.Y)
+    end
+end
+
 local function GetNearestPlayer()
     local NearestPlayer = nil
     local ShortestDistance = math.huge
 
     for _, Player in ipairs(Players:GetPlayers()) do
-        if Player ~= LocalPlayer and Player.Character then
+        if Player ~= Players.LocalPlayer and Player.Character then
             local Character = Player.Character
             local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
             local MousePosition = Mouse.Hit.p
@@ -31,31 +39,3 @@ local function GetNearestPlayer()
 
     return NearestPlayer
 end
-
-local function MoveMouseToTarget(Target)
-    local AimPart = GetAimPart(Target.Character)
-    if AimPart then
-        local MousePosition = Mouse.Hit.p
-        local AimPartPosition = AimPart.Position
-
-        local MoveVector = (AimPartPosition - MousePosition) * Sensitivity
-
-        Mousemoverel(MoveVector.X, MoveVector.Y)
-    end
-end
--- Events
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        AimbotEnabled = not AimbotEnabled
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if AimbotEnabled then
-        local NearestPlayer = GetNearestPlayer()
-
-        if NearestPlayer then
-            MoveMouseToTarget(NearestPlayer)
-        end
-    end
-end)
