@@ -21,36 +21,30 @@ local function GetClosestPlayer()
         MaximumDistance = math.huge
     end)()
 
-    for _, v in next, Players:GetPlayers() do
-        if v.Name ~= LocalPlayer.Name then
+    for _, v in ipairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer then
             if _G.TeamCheck == true then
                 if v.Team ~= LocalPlayer.Team then
-                    if v.Character ~= nil then
-                        if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-                            if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-                                local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart").Position)
-                                local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-                                
-                                if VectorDistance < MaximumDistance then
-                                    Target = v
-                                    MaximumDistance = VectorDistance
-                                end
-                            end
+                    local Character = v.Character
+                    if Character and Character:FindFirstChild("HumanoidRootPart") then
+                        local ScreenPoint = Camera:WorldToScreenPoint(Character.HumanoidRootPart.Position)
+                        local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                        
+                        if VectorDistance < MaximumDistance then
+                            Target = v
+                            MaximumDistance = VectorDistance
                         end
                     end
                 end
             else
-                if v.Character ~= nil then
-                    if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-                        if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-                            local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart").Position)
-                            local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-                            
-                            if VectorDistance < MaximumDistance then
-                                Target = v
-                                MaximumDistance = VectorDistance
-                            end
-                        end
+                local Character = v.Character
+                if Character and Character:FindFirstChild("HumanoidRootPart") then
+                    local ScreenPoint = Camera:WorldToScreenPoint(Character.HumanoidRootPart.Position)
+                    local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                    
+                    if VectorDistance < MaximumDistance then
+                        Target = v
+                        MaximumDistance = VectorDistance
                     end
                 end
             end
