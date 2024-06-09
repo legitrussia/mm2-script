@@ -32,16 +32,6 @@ local function GetNearestPlayer()
     return NearestPlayer
 end
 
-local function GetAimPart(Character)
-    if AimPart == "Head" then
-        return Character:FindFirstChild("Head")
-    elseif AimPart == "Torso" then
-        return Character:FindFirstChild("Torso")
-    else
-        return Character:FindFirstChild("HumanoidRootPart")
-    end
-end
-
 local function MoveMouseToTarget(Target)
     local AimPart = GetAimPart(Target.Character)
     if AimPart then
@@ -53,7 +43,6 @@ local function MoveMouseToTarget(Target)
         Mousemoverel(MoveVector.X, MoveVector.Y)
     end
 end
-
 -- Events
 UserInputService.InputBegan:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.MouseButton2 then
