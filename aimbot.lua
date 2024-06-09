@@ -9,6 +9,7 @@ _G.FREE_FOR_ALL = true
 _G.ESP_BIND = 52
 _G.CHANGE_AIM = 'q'
 _G.AIM_AT = 'Head'
+_G.SMOOTHING = 0.2  -- Ajuste para suavizar o movimento do mouse (0-1)
 
 wait(1)
 
@@ -44,6 +45,16 @@ function GetNearestPlayerToMouse()
     end
 
     return nearestPlayer
+end
+
+function MoveMouseToTarget(targetPosition)
+    local mouseLocation = game:GetService("UserInputService"):GetMouseLocation()
+    local screenTargetPos = CC:WorldToViewportPoint(targetPosition)
+
+    local moveVector = Vector2.new(screenTargetPos.X, screenTargetPos.Y) - mouseLocation
+    moveVector = moveVector * _G.SMOOTHING
+
+    mousemoveabs(mouseLocation.X + moveVector.X, mouseLocation.Y + moveVector.Y)
 end
 
 GUI_MAIN = Instance.new('ScreenGui', game.CoreGui)
@@ -178,9 +189,7 @@ game:GetService('RunService').RenderStepped:Connect(function()
         if TARGET then
             local AIM = TARGET.Character:FindFirstChild(_G.AIM_AT)
             if AIM then
-                local direction = (AIM.Position - CC.CFrame.p).unit
-                local cameraPosition = CC.CFrame.p
-                CC.CFrame = CFrame.new(cameraPosition, cameraPosition + direction)
+                MoveMouseToTarget(AIM.Position)
                 GUI_TARGET.Text = 'AIMBOT : ' .. TARGET.Name:sub(1, 5)
             end
         else
