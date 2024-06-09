@@ -19,9 +19,8 @@ local function GetNearestPlayer()
         if Player ~= LocalPlayer and Player.Character then
             local Character = Player.Character
             local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
-            local ScreenPoint = game.Workspace.CurrentCamera:WorldToScreenPoint(HumanoidRootPart.Position)
-
-            local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+            local MousePosition = Mouse.Hit.p
+            local Distance = (MousePosition - HumanoidRootPart.Position).Magnitude
 
             if Distance < ShortestDistance then
                 NearestPlayer = Player
