@@ -21,16 +21,18 @@ end
 local function GetClosestPlayer()
     local MaximumDistance = _G.CircleRadius
     local Target = nil
+    local LocalPlayer = Players.LocalPlayer
 
     for _, v in ipairs(Players:GetPlayers()) do
-        if v ~= Players.LocalPlayer then
-            if _G.TeamCheck and v.Team ~= Players.LocalPlayer.Team then
+        if v ~= LocalPlayer then
+            if _G.TeamCheck and v.Team ~= LocalPlayer.Team then
                 if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
                     if v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
                         local ScreenPoint = workspace.CurrentCamera:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
                         local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
                         if VectorDistance < MaximumDistance then
                             Target = v
+                            MaximumDistance = VectorDistance
                         end
                     end
                 end
@@ -41,6 +43,7 @@ local function GetClosestPlayer()
                         local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
                         if VectorDistance < MaximumDistance then
                             Target = v
+                            MaximumDistance = VectorDistance
                         end
                     end
                 end
@@ -90,15 +93,3 @@ UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         _G.AimbotEnabled = false
     end
-end)
-
--- Loop para atualizar o círculo FOV
-RunService.RenderStepped:Connect(function()
-    if FOV_CIRCLE.Visible then
-        FOV_CIRCLE.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
-    end
-
-    if _G.AimbotEnabled then
-        AimAt(GetClosestPlayer())
-    end
-end)
