@@ -1,4 +1,3 @@
-local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -20,7 +19,7 @@ _G.CircleVisible = true -- Determines whether or not the circle is visible.
 _G.CircleThickness = 0 -- The thickness of the circle.
 
 local FOVCircle = Drawing.new("Circle")
-FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+FOVCircle.Position = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
 FOVCircle.Radius = _G.CircleRadius
 FOVCircle.Filled = _G.CircleFilled
 FOVCircle.Color = _G.CircleColor
@@ -42,7 +41,7 @@ local function GetClosestPlayer()
 						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
 							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
 								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+								local VectorDistance = (Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
 								
 								if VectorDistance < MaximumDistance then
 									Target = v
@@ -56,7 +55,7 @@ local function GetClosestPlayer()
 					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
 						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
 							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+							local VectorDistance = (Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
 							
 							if VectorDistance < MaximumDistance then
 								Target = v
@@ -84,7 +83,7 @@ UserInputService.InputEnded:Connect(function(Input)
 end)
 
 RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    FOVCircle.Position = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
     FOVCircle.Radius = _G.CircleRadius
     FOVCircle.Filled = _G.CircleFilled
     FOVCircle.Color = _G.CircleColor
@@ -95,6 +94,14 @@ RunService.RenderStepped:Connect(function()
     FOVCircle.Thickness = _G.CircleThickness
 
     if Holding == true and _G.AimbotEnabled == true then
-        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
+        local target = GetClosestPlayer()
+        if target then
+            local targetPosition = target.Character[_G.AimPart].Position
+            local mousePosition = UserInputService.MousePosition
+            local direction = (targetPosition - Camera.CFrame.p).unit
+            local angle = math.atan2(mousePosition.Y - UserInputService.MouseDelta.Y, mousePosition.X - UserInputService.MouseDelta.X)
+            local finalPosition = Vector2.new(UserInputService.MouseDelta.X + math.cos(angle) * 100, UserInputService.MouseDelta.Y + math.sin(angle) * 100)
+            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + direction)}):Play()
+        end
     end
 end)
