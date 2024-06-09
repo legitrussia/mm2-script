@@ -13,6 +13,7 @@ FOV_CIRCLE.Thickness = 1
 
 local function updateFOVCircle(radius)
     FOV_CIRCLE.Radius = radius
+    print("FOV atualizado para:", radius)
 end
 
 local function toggleFOVCircle(enabled)
@@ -57,7 +58,6 @@ local function createMenu()
     fovSlider = tab:CreateSlider("FOV", 0, 180, function(value)
         _G.CircleRadius = value
         updateFOVCircle(value)
-        _G.UpdateAimFOV(value)  -- Atualiza o FOV do aimbot quando o valor do menu é alterado
         print("FOV set to:", value)
     end)
 
