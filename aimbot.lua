@@ -55,7 +55,7 @@ local function AimAt(target)
     if target then
         local aimPart = target.Character:FindFirstChild(_G.AimPart)
         if aimPart then
-            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.FOV, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
                 CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, aimPart.Position)
             }):Play()
         end
