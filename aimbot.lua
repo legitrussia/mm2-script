@@ -61,9 +61,16 @@ local function AimAt(target)
 
             local moveVector = (Vector2.new(aimPosition.X, aimPosition.Y) - Vector2.new(mousePosition.X, mousePosition.Y)) * _G.Sensitivity
 
-            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
-                CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, aimPart.Position)
-            }):Play()
+            -- Calcula a distância do alvo até o mouse
+            local distanceToTarget = (aimPosition - mousePosition).Magnitude
+            
+            -- Verifica se o alvo está dentro do FOV
+            if distanceToTarget <= fov then
+                -- Cria um tweem para mover a câmera em direção ao alvo
+                TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                    CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, aimPart.Position)
+                }):Play()
+            end
         end
     end
 end
