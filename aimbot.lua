@@ -80,10 +80,15 @@ local function MoveMouseToTarget(targetPosition)
     local mouseLocation = userInputService:GetMouseLocation()
     local screenTargetPos = CC:WorldToViewportPoint(targetPosition)
 
-    local moveVector = Vector2.new(screenTargetPos.X, screenTargetPos.Y) - mouseLocation
-    moveVector = moveVector / (11 - SMOOTHING)  -- Ajustar suavização com base no valor do slider
+    local targetVector = Vector2.new(screenTargetPos.X, screenTargetPos.Y)
+    local currentVector = Vector2.new(mouseLocation.X, mouseLocation.Y)
+    local moveVector = (targetVector - currentVector) / (11 - SMOOTHING)  -- Ajustar suavização com base no valor do slider
 
-    mousemoverel(moveVector.X, moveVector.Y)
+    for i = 1, 11 - SMOOTHING do
+        local newPos = currentVector + moveVector * i
+        mousemoverel(newPos.X - currentVector.X, newPos.Y - currentVector.Y)
+        wait(0.03)  -- Ajuste conforme necessário para a suavidade do movimento
+    end
 end
 
 -- Configuração dos eventos do mouse
