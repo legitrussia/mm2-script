@@ -6,10 +6,10 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Holding = false
 
-_G.AimbotEnabled = false -- Inicialmente desativado
-_G.TeamCheck = false -- Se verdadeiro, o aimbot só irá travar em membros do time inimigo
-_G.AimPart = "Head" -- Parte do corpo onde o aimbot irá travar
-_G.Sensitivity = 0 -- Sensibilidade do aimbot
+local AimbotEnabled = false -- Inicialmente desativado
+local TeamCheck = false -- Se verdadeiro, o aimbot só irá travar em membros do time inimigo
+local AimPart = "Head" -- Parte do corpo onde o aimbot irá travar
+local Sensitivity = 0 -- Sensibilidade do aimbot
 
 local function GetClosestPlayer()
     local MaximumDistance = math.huge
@@ -22,7 +22,7 @@ local function GetClosestPlayer()
 
     for _, v in next, Players:GetPlayers() do
         if v.Name ~= LocalPlayer.Name then
-            if _G.TeamCheck == true then
+            if TeamCheck == true then
                 if v.Team ~= LocalPlayer.Team then
                     if v.Character ~= nil then
                         if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
@@ -72,20 +72,27 @@ UserInputService.InputEnded:Connect(function(Input)
 end)
 
 RunService.RenderStepped:Connect(function()
-    if Holding == true and _G.AimbotEnabled == true then
+    if Holding == true and AimbotEnabled == true then
         local ClosestPlayer = GetClosestPlayer()
         if ClosestPlayer then
-            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, ClosestPlayer.Character[_G.AimPart].Position)}):Play()
+            TweenService:Create(Camera, TweenInfo.new(Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, ClosestPlayer.Character[AimPart].Position)}):Play()
         end
     end
 end)
 
 -- Função para alternar o estado do aimbot
-local function ToggleAimbot(value)
-    _G.AimbotEnabled = value
+local function ToggleAimbot()
+    AimbotEnabled = not AimbotEnabled
+    if AimbotEnabled then
+        print("Aimbot ativado")
+    else
+        print("Aimbot desativado")
+    end
 end
 
--- Adicionando a checkbox no menu para ativar/desativar o aimbot
-local Toggle1 = Tab1:NewToggle("Aimbot", false, function(value)
-    ToggleAimbot(value)
+-- Exemplo de ativação/desativação do aimbot com uma tecla específica (F)
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.KeyCode == Enum.KeyCode.F then
+        ToggleAimbot()
+    end
 end)
