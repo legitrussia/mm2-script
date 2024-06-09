@@ -1,106 +1,60 @@
+-- Services
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- Local variables
 local LocalPlayer = Players.LocalPlayer
-local Holding = false
+local Mouse = LocalPlayer:GetMouse()
+local AimbotEnabled = false
+local AimPart = "Head"
+local Sensitivity = 0.1
 
-_G.AimbotEnabled = true
-_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
-_G.AimPart = "Head" -- Where the aimbot script would lock at.
-_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
+-- Functions
+local function GetNearestPlayer()
+	local NearestPlayer = nil
+	local ShortestDistance = math.huge
 
-_G.CircleSides = 64 -- How many sides the FOV circle would have.
-_G.CircleColor = Color3.fromRGB(255, 255, 255) -- (RGB) Color that the FOV circle would appear as.
-_G.CircleTransparency = 0.7 -- Transparency of the circle.
-_G.CircleRadius = 80 -- The radius of the circle / FOV.
-_G.CircleFilled = false -- Determines whether or not the circle is filled.
-_G.CircleVisible = true -- Determines whether or not the circle is visible.
-_G.CircleThickness = 0 -- The thickness of the circle.
+	for _, Player in ipairs(Players:GetPlayers()) do
+		if Player ~= LocalPlayer and Player.Character then
+			local Character = Player.Character
+			local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+			local ScreenPoint = game.Workspace.CurrentCamera:WorldToScreenPoint(HumanoidRootPart.Position)
 
-local FOVCircle = Drawing.new("Circle")
-FOVCircle.Position = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
-FOVCircle.Radius = _G.CircleRadius
-FOVCircle.Filled = _G.CircleFilled
-FOVCircle.Color = _G.CircleColor
-FOVCircle.Visible = _G.CircleVisible
-FOVCircle.Radius = _G.CircleRadius
-FOVCircle.Transparency = _G.CircleTransparency
-FOVCircle.NumSides = _G.CircleSides
-FOVCircle.Thickness = _G.CircleThickness
+			local Distance = (Vector2.new(Mouse.X, Mouse.Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
 
-local function GetClosestPlayer()
-	local MaximumDistance = _G.CircleRadius
-	local Target = nil
-
-	for _, v in next, Players:GetPlayers() do
-		if v.Name ~= LocalPlayer.Name then
-			if _G.TeamCheck == true then
-				if v.Team ~= LocalPlayer.Team then
-					if v.Character ~= nil then
-						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-								local ScreenPoint = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
-								local VectorDistance = (ScreenPoint - FOVCircle.Position).Magnitude
-								
-								if VectorDistance < MaximumDistance then
-									Target = v
-								end
-							end
-						end
-					end
-				end
-			else
-				if v.Character ~= nil then
-					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-							local ScreenPoint = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
-							local VectorDistance = (ScreenPoint - FOVCircle.Position).Magnitude
-							
-							if VectorDistance < MaximumDistance then
-								Target = v
-							end
-						end
-					end
-				end
+			if Distance < ShortestDistance then
+				NearestPlayer = Player
+				ShortestDistance = Distance
 			end
 		end
 	end
 
-	return Target
+	return NearestPlayer
 end
 
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = true
-    end
-end)
+local function MoveMouseToTarget(Target)
+	local HumanoidRootPart = Target.Character:WaitForChild("HumanoidRootPart")
+	local ScreenPoint = game.Workspace.CurrentCamera:WorldToScreenPoint(HumanoidRootPart.Position)
 
-UserInputService.InputEnded:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = false
-    end
+	local MoveVector = (Vector2.new(ScreenPoint.X, ScreenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)) * Sensitivity
+
+	Mousemoverel(MoveVector.X, MoveVector.Y)
+end
+
+-- Events
+UserInputService.InputBegan:Connect(function(Input)
+	if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+		AimbotEnabled = not AimbotEnabled
+	end
 end)
 
 RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y)
-    FOVCircle.Radius = _G.CircleRadius
-    FOVCircle.Filled = _G.CircleFilled
-    FOVCircle.Color = _G.CircleColor
-    FOVCircle.Visible = _G.CircleVisible
-    FOVCircle.Radius = _G.CircleRadius
-    FOVCircle.Transparency = _G.CircleTransparency
-    FOVCircle.NumSides = _G.CircleSides
-    FOVCircle.Thickness = _G.CircleThickness
+	if AimbotEnabled then
+		local NearestPlayer = GetNearestPlayer()
 
-    if Holding == true and _G.AimbotEnabled == true then
-        local target = GetClosestPlayer()
-        if target then
-            local targetPosition = target.Character[_G.AimPart].Position
-            local direction = (Vector2.new(UserInputService.MousePosition.X, UserInputService.MousePosition.Y) - FOVCircle.Position).unit
-            local angle = math.atan2(direction.Y, direction.X)
-            local finalPosition = Vector2.new(FOVCircle.Position.X + math.cos(angle) * 100, FOVCircle.Position.Y + math.sin(angle) * 100)
-            TweenService:Create(FOVCircle, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Position = finalPosition}):Play()
-        end
-    end
+		if NearestPlayer then
+			MoveMouseToTarget(NearestPlayer)
+		end
+	end
 end)
