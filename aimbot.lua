@@ -12,12 +12,12 @@ _G.AimPart = "Head" -- Onde o script de aimbot vai travar.
 _G.Sensitivity = 0 -- Quantos segundos leva para o script de aimbot travar oficialmente no alvo.
 
 local function GetClosestPlayer()
-    local MaximumDistance = math.huge
+    local MaximumDistance = _G.CircleRadius
     local Target = nil
   
     coroutine.wrap(function()
         wait(20)
-        MaximumDistance = math.huge -- Redefine MaximumDistance para que o Aimbot não a considere como uma variável muito pequena e pare de capturar jogadores...
+        MaximumDistance = _G.CircleRadius -- Redefine o MaximumDistance para que o Aimbot não o considere como uma variável muito pequena e pare de capturar jogadores...
     end)()
 
     for _, v in next, Players:GetPlayers() do
@@ -60,7 +60,7 @@ local function GetClosestPlayer()
 end
 
 local function UpdateAimFOV(fov)
-    _G.Sensitivity = fov
+    _G.CircleRadius = fov
 end
 
 UserInputService.InputBegan:Connect(function(Input)
@@ -79,7 +79,15 @@ RunService.RenderStepped:Connect(function()
     if Holding == true and _G.AimbotEnabled == true then
         local closestPlayer = GetClosestPlayer()
         if closestPlayer then
-            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, closestPlayer.Character[_G.AimPart].Position)}):Play()
+            local aimPart = closestPlayer.Character[_G.AimPart]
+            if aimPart then
+                local aimPosition = Camera:WorldToScreenPoint(aimPart.Position)
+                local mousePosition = UserInputService:GetMouseLocation()
+                local distanceToTarget = (aimPosition - mousePosition).Magnitude
+                if distanceToTarget <= _G.CircleRadius then
+                    TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, aimPart.Position)}):Play()
+                end
+            end
         end
     end
 end)
