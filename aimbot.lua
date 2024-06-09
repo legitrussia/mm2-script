@@ -57,7 +57,6 @@ local function GetNearestPlayerToMouse()
     for _, v in pairs(players) do
         if v ~= PLAYER and v.Character and v.Character:FindFirstChild(AIM_PART) then
             local aimPart = v.Character[AIM_PART]
-            local distance = (aimPart.Position - CC.CFrame.p).magnitude
             local screenPoint = CC:WorldToViewportPoint(aimPart.Position)
             local mouseDistance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(MOUSE.X, MOUSE.Y)).magnitude
 
@@ -77,13 +76,14 @@ end
 
 -- Função para mover o mouse suavemente em direção ao alvo
 local function MoveMouseToTarget(targetPosition)
-    local mouseLocation = game:GetService("UserInputService"):GetMouseLocation()
+    local userInputService = game:GetService("UserInputService")
+    local mouseLocation = userInputService:GetMouseLocation()
     local screenTargetPos = CC:WorldToViewportPoint(targetPosition)
 
     local moveVector = Vector2.new(screenTargetPos.X, screenTargetPos.Y) - mouseLocation
     moveVector = moveVector / (11 - SMOOTHING)  -- Ajustar suavização com base no valor do slider
 
-    mousemoveabs(mouseLocation.X + moveVector.X, mouseLocation.Y + moveVector.Y)
+    mousemoverel(moveVector.X, moveVector.Y)
 end
 
 -- Configuração dos eventos do mouse
