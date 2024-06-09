@@ -5,12 +5,11 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Holding = false
-local AimbotConnection = nil
 
-_G.AimbotEnabled = false
-_G.TeamCheck = false
-_G.AimPart = "Head"
-_G.Sensitivity = 0
+_G.AimbotEnabled = false -- Inicialmente desativado
+_G.TeamCheck = false -- Se verdadeiro, o aimbot só irá travar em membros do time inimigo
+_G.AimPart = "Head" -- Parte do corpo onde o aimbot irá travar
+_G.Sensitivity = 0 -- Sensibilidade do aimbot
 
 local function GetClosestPlayer()
     local MaximumDistance = math.huge
@@ -18,33 +17,39 @@ local function GetClosestPlayer()
     
     coroutine.wrap(function()
         wait(20)
-        MaximumDistance = math.huge
+        MaximumDistance = math.huge -- Reseta a distância máxima
     end)()
 
-    for _, v in ipairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer then
+    for _, v in next, Players:GetPlayers() do
+        if v.Name ~= LocalPlayer.Name then
             if _G.TeamCheck == true then
                 if v.Team ~= LocalPlayer.Team then
-                    local Character = v.Character
-                    if Character and Character:FindFirstChild("HumanoidRootPart") then
-                        local ScreenPoint = Camera:WorldToScreenPoint(Character.HumanoidRootPart.Position)
-                        local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-                        
-                        if VectorDistance < MaximumDistance then
-                            Target = v
-                            MaximumDistance = VectorDistance
+                    if v.Character ~= nil then
+                        if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+                            if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+                                local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart").Position)
+                                local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                                
+                                if VectorDistance < MaximumDistance then
+                                    Target = v
+                                    MaximumDistance = VectorDistance
+                                end
+                            end
                         end
                     end
                 end
             else
-                local Character = v.Character
-                if Character and Character:FindFirstChild("HumanoidRootPart") then
-                    local ScreenPoint = Camera:WorldToScreenPoint(Character.HumanoidRootPart.Position)
-                    local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-                    
-                    if VectorDistance < MaximumDistance then
-                        Target = v
-                        MaximumDistance = VectorDistance
+                if v.Character ~= nil then
+                    if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+                        if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+                            local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart").Position)
+                            local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                            
+                            if VectorDistance < MaximumDistance then
+                                Target = v
+                                MaximumDistance = VectorDistance
+                            end
+                        end
                     end
                 end
             end
@@ -66,31 +71,21 @@ UserInputService.InputEnded:Connect(function(Input)
     end
 end)
 
-local function ActivateAimbot()
-    if not _G.AimbotEnabled then
-        AimbotConnection = RunService.RenderStepped:Connect(function()
-            if Holding == true and _G.AimbotEnabled == true then
-                local ClosestPlayer = GetClosestPlayer()
-                if ClosestPlayer then
-                    TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, ClosestPlayer.Character[_G.AimPart].Position)}):Play()
-                end
-            end
-        end)
+RunService.RenderStepped:Connect(function()
+    if Holding == true and _G.AimbotEnabled == true then
+        local ClosestPlayer = GetClosestPlayer()
+        if ClosestPlayer then
+            TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, ClosestPlayer.Character[_G.AimPart].Position)}):Play()
+        end
     end
-end
+end)
 
-local function DeactivateAimbot()
-    if _G.AimbotEnabled and AimbotConnection then
-        AimbotConnection:Disconnect()
-    end
+-- Função para alternar o estado do aimbot
+local function ToggleAimbot(value)
+    _G.AimbotEnabled = value
 end
 
 -- Adicionando a checkbox no menu para ativar/desativar o aimbot
 local Toggle1 = Tab1:NewToggle("Aimbot", false, function(value)
-    _G.AimbotEnabled = value
-    if value then
-        ActivateAimbot()
-    else
-        DeactivateAimbot()
-    end
+    ToggleAimbot(value)
 end)
