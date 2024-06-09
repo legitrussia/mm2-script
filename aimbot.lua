@@ -1,77 +1,90 @@
-local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local LocalPlayer = Players.LocalPlayer
-local Holding = false
+local RunService = game:GetService("RunService")
 
-_G.AimbotEnabled = true
-_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
-_G.AimPart = "Head" -- Where the aimbot script would lock at.
-_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
+local FOV_CIRCLE = Drawing.new("Circle")
+FOV_CIRCLE.Color = Color3.new(1, 1, 1)
+FOV_CIRCLE.Transparency = 0.7
+FOV_CIRCLE.Filled = false
+FOV_CIRCLE.Visible = false
+FOV_CIRCLE.Thickness = 1
 
-local function GetClosestPlayer()
-	local MaximumDistance = math.huge
-	local Target = nil
-  
-  	coroutine.wrap(function()
-    		wait(20); MaximumDistance = math.huge -- Reset the MaximumDistance so that the Aimbot doesn't remember it as a very small variable and stop capturing players...
-  	end)()
-
-	for _, v in next, Players:GetPlayers() do
-		if v.Name ~= LocalPlayer.Name then
-			if _G.TeamCheck == true then
-				if v.Team ~= LocalPlayer.Team then
-					if v.Character ~= nil then
-						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-								
-								if VectorDistance < MaximumDistance then
-									Target = v
-                  							MaximumDistance = VectorDistance
-								end
-							end
-						end
-					end
-				end
-			else
-				if v.Character ~= nil then
-					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
-						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
-							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
-							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
-							
-							if VectorDistance < MaximumDistance then
-								Target = v
-               							MaximumDistance = VectorDistance
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-
-	return Target
+local function updateFOVCircle(radius)
+    FOV_CIRCLE.Radius = radius
 end
 
-UserInputService.InputBegan:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = true
+local function toggleFOVCircle(enabled)
+    FOV_CIRCLE.Visible = enabled
+end
+
+local function GetClosestPlayer()
+    local MaximumDistance = _G.CircleRadius
+    local Target = nil
+
+    for _, v in ipairs(Players:GetPlayers()) do
+        if v ~= Players.LocalPlayer then
+            if _G.TeamCheck and v.Team ~= Players.LocalPlayer.Team then
+                if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    if v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+                        local ScreenPoint = workspace.CurrentCamera:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
+                        local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                        if VectorDistance < MaximumDistance then
+                            Target = v
+                        end
+                    end
+                end
+            elseif not _G.TeamCheck then
+                if v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+                    if v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+                        local ScreenPoint = workspace.CurrentCamera:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
+                        local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+                        if VectorDistance < MaximumDistance then
+                            Target = v
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return Target
+end
+
+local function AimAt(target)
+    if target then
+        local aimPart = target.Character:FindFirstChild(_G.AimPart)
+        if aimPart then
+            TweenService:Create(workspace.CurrentCamera, TweenInfo.new(_G.FOV, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut), {
+                CFrame = CFrame.new(workspace.CurrentCamera.CFrame.Position, aimPart.Position)
+            }):Play()
+        end
+    end
+end
+
+-- Ouvinte de evento para o botão direito do mouse
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        _G.AimbotEnabled = true
     end
 end)
 
-UserInputService.InputEnded:Connect(function(Input)
-    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
-        Holding = false
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        _G.AimbotEnabled = false
     end
 end)
 
+-- Loop para atualizar o círculo FOV
 RunService.RenderStepped:Connect(function()
-    if Holding == true and _G.AimbotEnabled == true then
-        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
+    if FOV_CIRCLE.Visible then
+        FOV_CIRCLE.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
+    end
+
+    if _G.AimbotEnabled then
+        AimAt(GetClosestPlayer())
     end
 end)
+
+-- Aqui você pode definir _G.AimbotEnabled = true para ativar o Aimbot automaticamente ou pode ser ativado por meio de um botão no menu.
+_G.AimbotEnabled = false
