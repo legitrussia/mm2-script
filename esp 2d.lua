@@ -148,7 +148,7 @@ game.Players.PlayerAdded:Connect(function(newplr)
 end)
 
 -- Menu para ESP
-local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ShaddowScripts/Main/main/Library"))()
+local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/Script.lua"))()
 local Main = library:CreateWindow("Menu", "Crimson")
 local tab2 = Main:CreateTab("Esp")
 
