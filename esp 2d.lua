@@ -1,26 +1,26 @@
--- Preview: https://cdn.discordapp.com/attachments/796378086446333984/818089455897542687/unknown.png
--- Made by Blissful#4992
+-- Configurações do ESP
 local Settings = {
     Box_Color = Color3.fromRGB(255, 0, 0),
     Tracer_Color = Color3.fromRGB(255, 0, 0),
     Tracer_Thickness = 1,
     Box_Thickness = 1,
-    Tracer_Origin = "Bottom", -- Middle or Bottom if FollowMouse is on this won't matter...
+    Tracer_Origin = "Bottom", -- Middle or Bottom, se FollowMouse estiver ativado, isso não importa...
     Tracer_FollowMouse = false,
     Tracers = true
 }
 local Team_Check = {
-    TeamCheck = false, -- if TeamColor is on this won't matter...
+    TeamCheck = false, -- Se TeamColor estiver ativado, isso não importa...
     Green = Color3.fromRGB(0, 255, 0),
     Red = Color3.fromRGB(255, 0, 0)
 }
 local TeamColor = true
 
---// SEPARATION
+-- Variáveis principais
 local player = game:GetService("Players").LocalPlayer
 local camera = game:GetService("Workspace").CurrentCamera
 local mouse = player:GetMouse()
 
+-- Funções utilitárias
 local function NewQuad(thickness, color)
     local quad = Drawing.new("Quad")
     quad.Visible = false
@@ -47,36 +47,29 @@ local function NewLine(thickness, color)
 end
 
 local function Visibility(state, lib)
-    for u, x in pairs(lib) do
-        x.Visible = state
+    for _, item in pairs(lib) do
+        item.Visible = state
     end
 end
 
-local function ToColor3(col) --Function to convert, just cuz c;
-    local r = col.r --Red value
-    local g = col.g --Green value
-    local b = col.b --Blue value
-    return Color3.new(r,g,b); --Color3 datatype, made of the RGB inputs
-end
-
-local black = Color3.fromRGB(0, 0 ,0)
+local black = Color3.fromRGB(0, 0, 0)
 local function ESP(plr)
     local library = {
-        --//Tracer and Black Tracer(black border)
+        -- Tracer e Tracer Preto (borda preta)
         blacktracer = NewLine(Settings.Tracer_Thickness*2, black),
         tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
-        --//Box and Black Box(black border)
+        -- Caixa e Caixa Preta (borda preta)
         black = NewQuad(Settings.Box_Thickness*2, black),
         box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
-        --//Bar and Green Health Bar (part that moves up/down)
+        -- Barra de Saúde e Barra de Saúde Verde (parte que se move para cima/baixo)
         healthbar = NewLine(3, black),
         greenhealth = NewLine(1.5, black)
     }
 
     local function Colorize(color)
-        for u, x in pairs(library) do
-            if x ~= library.healthbar and x ~= library.greenhealth and x ~= library.blacktracer and x ~= library.black then
-                x.Color = color
+        for _, item in pairs(library) do
+            if item ~= library.healthbar and item ~= library.greenhealth and item ~= library.blacktracer and item ~= library.black then
+                item.Color = color
             end
         end
     end
@@ -84,7 +77,7 @@ local function ESP(plr)
     local function Updater()
         local connection
         connection = game:GetService("RunService").RenderStepped:Connect(function()
-            if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") ~= nil then
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") then
                 local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
                 if OnScreen then
                     local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
@@ -99,7 +92,7 @@ local function ESP(plr)
                     Size(library.box)
                     Size(library.black)
 
-                    --// Health Bar
+                    -- Barra de Saúde
                     local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)).magnitude 
                     local healthoffset = plr.Character.Humanoid.Health/plr.Character.Humanoid.MaxHealth * d
 
@@ -124,7 +117,7 @@ local function ESP(plr)
                         library.tracer.Color = Settings.Tracer_Color
                         library.box.Color = Settings.Box_Color
                     end
-                    if TeamColor == true then
+                    if TeamColor then
                         Colorize(plr.TeamColor.Color)
                     end
                     Visibility(true, library)
@@ -142,7 +135,7 @@ local function ESP(plr)
     coroutine.wrap(Updater)()
 end
 
-for i, v in pairs(game:GetService("Players"):GetPlayers()) do
+for _, v in pairs(game:GetService("Players"):GetPlayers()) do
     if v.Name ~= player.Name then
         coroutine.wrap(ESP)(v)
     end
