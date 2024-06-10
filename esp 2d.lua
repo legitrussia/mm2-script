@@ -1,5 +1,14 @@
 local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Exunys-ESP/main/src/ESP.lua"))()
 
+local RunService = game:GetService("RunService");
+local PlayersService = game:GetService("Players");
+
+-- Variables
+local Camera = workspace.CurrentCamera;
+local LastPos;
+local Lines = {};
+local Quads = {};
+
 local ESP_Properties_Section = _ESP:Section({
 	Name = "ESP Properties",
 	Side = "Left"
