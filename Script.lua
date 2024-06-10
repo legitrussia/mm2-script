@@ -42,6 +42,8 @@ local function createMenu()
 
     tab:CreateCheckbox("Fov View", function(state)
         toggleFOVCircle(state)
+        _G.FOVEnabled = state
+        print("FOV View ativado:", state)
     end)
 
     tab:CreateSlider("Smoothness", 1, 10, function(value)
@@ -88,7 +90,7 @@ local function createMenu()
 
     -- Loop para atualizar o círculo FOV
     RunService.RenderStepped:Connect(function()
-        if FOV_CIRCLE.Visible then
+        if _G.FOVEnabled and FOV_CIRCLE.Visible then
             FOV_CIRCLE.Position = Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y)
         end
     end)
