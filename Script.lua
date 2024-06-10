@@ -27,14 +27,17 @@ local function createMenu()
     local tab2 = Main:CreateTab("Esp")
     local tab3 = Main:CreateTab("Misc")
 
-    local function ToggleAimbot(enabled)
-        _G.AimbotEnabled = enabled
-        print("Aimbot ativado:", enabled)
-        
-        if enabled then
-            loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/aimbot.lua"))()
-        end
+local function ToggleAimbot(enabled)
+    _G.AimbotEnabled = enabled
+    print("Aimbot ativado:", enabled)
+    
+    if enabled then
+        loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/aimbot.lua"))()
+    else
+        _G.AimbotEnabled = false
+        print("Aimbot desativado")
     end
+end
 
     tab:CreateCheckbox("Aimbot", function(state)
         ToggleAimbot(state)
