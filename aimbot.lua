@@ -1,9 +1,9 @@
-local Camera = workspace.CurrentCamera
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 _G.AimbotEnabled = true
 _G.TeamCheck = false -- Se definido como true, o script só travará sua mira nos membros da equipe inimiga.
@@ -22,7 +22,7 @@ local function GetClosestPlayer()
         MaximumDistance = _G.CircleRadius -- Redefine o MaximumDistance para que o Aimbot não o considere como uma variável muito pequena e pare de capturar jogadores...
     end)()
 
-    for _, v in next, Players:GetPlayers() do
+    for _, v in ipairs(Players:GetPlayers()) do
         if v ~= LocalPlayer and (not _G.TeamCheck or v.Team ~= LocalPlayer.Team) then
             if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
                 local ScreenPoint = Camera:WorldToScreenPoint(v.Character.HumanoidRootPart.Position)
@@ -75,12 +75,8 @@ end)
 -- Atualiza o FOV do aimbot quando o valor do menu é alterado
 _G.UpdateAimFOV = UpdateAimFOV
 
--- Puxa o valor do FOV atual do menu
-_G.CircleRadius = 100 -- Valor padrão para o raio do círculo de FOV
-UpdateAimFOV(_G.CircleRadius) -- Atualiza o FOV com o valor padrão
-
 -- Ajuste para atualizar o FOV do aimbot quando o valor do menu for alterado
-local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/Script.lua"))()
+local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ShaddowScripts/Main/main/Library"))()
 library.options.fovSlider.OnChange:Connect(function(value)
     _G.CircleRadius = value
     UpdateAimFOV(value)
