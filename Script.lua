@@ -6,7 +6,6 @@ local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Holding = false
-local CurrentTween = nil
 local MenuOpen = true
 
 _G.AimbotEnabled = false
@@ -167,10 +166,6 @@ end)
 UserInputService.InputEnded:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.MouseButton2 then
         Holding = false
-        if CurrentTween then
-            CurrentTween:Cancel()
-            CurrentTween = nil
-        end
     end
 end)
 
@@ -180,15 +175,15 @@ RunService.RenderStepped:Connect(function()
         if target then
             local aimPartPosition = target.Character[_G.AimPart].Position
             if isInFOV(aimPartPosition) then
-                if CurrentTween then
-                    CurrentTween:Cancel()
+                local direction = (aimPartPosition - Camera.CFrame.Position).Unit
+                local targetCFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + direction)
+
+                if _G.Sensitivity > 0 then
+                    Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, _G.Sensitivity)
+                else
+                    Camera.CFrame = targetCFrame
                 end
-                CurrentTween = TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, aimPartPosition)})
-                CurrentTween:Play()
             end
         end
-    elseif CurrentTween then
-        CurrentTween:Cancel()
-        CurrentTween = nil
     end
 end)
