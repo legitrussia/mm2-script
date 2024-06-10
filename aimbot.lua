@@ -76,5 +76,12 @@ end)
 _G.UpdateAimFOV = UpdateAimFOV
 
 -- Puxa o valor do FOV atual do menu
-local menuFOV = _G.CircleRadius
-UpdateAimFOV(menuFOV)
+_G.CircleRadius = 100 -- Valor padrão para o raio do círculo de FOV
+UpdateAimFOV(_G.CircleRadius) -- Atualiza o FOV com o valor padrão
+
+-- Ajuste para atualizar o FOV do aimbot quando o valor do menu for alterado
+local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ShaddowScripts/Main/main/Library"))()
+library.options.fovSlider.OnChange:Connect(function(value)
+    _G.CircleRadius = value
+    UpdateAimFOV(value)
+end)
