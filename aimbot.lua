@@ -75,10 +75,3 @@ RunService.RenderStepped:Connect(function()
         TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
     end
 end)
-
--- Atualiza o FOV do aimbot quando o valor do menu é alterado
-_G.UpdateAimFOV = UpdateAimFOV
-
--- Puxa o valor do FOV atual do menu
-local menuFOV = _G.CircleRadius
-UpdateAimFOV(menuFOV)
