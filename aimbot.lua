@@ -1,60 +1,77 @@
--- Serviço de Input para capturar eventos de mouse
-local userInputService = game:GetService("UserInputService")
+local Camera = workspace.CurrentCamera
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Holding = false
 
--- Serviço de Workspace para acessar os objetos do jogo
-local workspace = game:GetService("Workspace")
+_G.AimbotEnabled = true
+_G.TeamCheck = false -- If set to true then the script would only lock your aim at enemy team members.
+_G.AimPart = "Head" -- Where the aimbot script would lock at.
+_G.Sensitivity = 0 -- How many seconds it takes for the aimbot script to officially lock onto the target's aimpart.
 
--- Variável para armazenar o jogador alvo
-local targetPlayer
+local function GetClosestPlayer()
+	local MaximumDistance = math.huge
+	local Target = nil
+  
+  	coroutine.wrap(function()
+    		wait(20); MaximumDistance = math.huge -- Reset the MaximumDistance so that the Aimbot doesn't remember it as a very small variable and stop capturing players...
+  	end)()
 
--- Função para capturar evento de pressionamento do mouse2
-userInputService.InputBegan:Connect(function(input)
-  if input.UserInputType == Enum.UserInputType.MouseButton2 then
-    -- Obter a posição do cursor
-    local mousePosition = userInputService:GetMouseLocation()
+	for _, v in next, Players:GetPlayers() do
+		if v.Name ~= LocalPlayer.Name then
+			if _G.TeamCheck == true then
+				if v.Team ~= LocalPlayer.Team then
+					if v.Character ~= nil then
+						if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+							if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+								local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+								local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+								
+								if VectorDistance < MaximumDistance then
+									Target = v
+                  							MaximumDistance = VectorDistance
+								end
+							end
+						end
+					end
+				end
+			else
+				if v.Character ~= nil then
+					if v.Character:FindFirstChild("HumanoidRootPart") ~= nil then
+						if v.Character:FindFirstChild("Humanoid") ~= nil and v.Character:FindFirstChild("Humanoid").Health ~= 0 then
+							local ScreenPoint = Camera:WorldToScreenPoint(v.Character:WaitForChild("HumanoidRootPart", math.huge).Position)
+							local VectorDistance = (Vector2.new(UserInputService:GetMouseLocation().X, UserInputService:GetMouseLocation().Y) - Vector2.new(ScreenPoint.X, ScreenPoint.Y)).Magnitude
+							
+							if VectorDistance < MaximumDistance then
+								Target = v
+               							MaximumDistance = VectorDistance
+							end
+						end
+					end
+				end
+			end
+		end
+	end
 
-    -- Encontrar o jogador mais próximo
-    targetPlayer = findClosestPlayer(mousePosition)
+	return Target
+end
 
-    -- Verificar se o jogador está dentro do FOV
-    if isPlayerInFov(targetPlayer, mousePosition) then
-      -- Mover o cursor para o jogador
-      userInputService:MoveMouse(targetPlayer.Character.HumanoidRootPart.Position)
+UserInputService.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = true
     end
-  end
 end)
 
--- Função para encontrar o jogador mais próximo
-function findClosestPlayer(mousePosition)
-  local closestPlayer
-  local closestDistance = math.huge
-
-  -- Iterar sobre todos os jogadores
-  for _, player in pairs(workspace.Players:GetPlayers()) do
-    if player ~= game.Players.LocalPlayer then
-      local character = player.Character
-      if character then
-        local distance = (character.HumanoidRootPart.Position - mousePosition).magnitude
-        if distance < closestDistance then
-          closestPlayer = player
-          closestDistance = distance
-        end
-      end
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton2 then
+        Holding = false
     end
-  end
+end)
 
-  return closestPlayer
-end
-
--- Função para verificar se o jogador está dentro do FOV
-function isPlayerInFov(player, mousePosition)
-  local fov = 50 -- Definir o FOV em graus
-  local camera = workspace.CurrentCamera
-  local character = player.Character
-  if character then
-    local direction = (character.HumanoidRootPart.Position - camera.CFrame.Position).unit
-    local angle = math.deg(math.acos(direction:Dot(camera.CFrame.LookVector)))
-    return angle < fov
-  end
-  return false
-end
+RunService.RenderStepped:Connect(function()
+    if Holding == true and _G.AimbotEnabled == true then
+        TweenService:Create(Camera, TweenInfo.new(_G.Sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CFrame = CFrame.new(Camera.CFrame.Position, GetClosestPlayer().Character[_G.AimPart].Position)}):Play()
+    end
+end)
