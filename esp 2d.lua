@@ -1,210 +1,247 @@
--- Configurações do ESP
-local Settings = {
-    Box_Color = Color3.fromRGB(255, 0, 0),
-    Tracer_Color = Color3.fromRGB(255, 0, 0),
-    Tracer_Thickness = 1,
-    Box_Thickness = 1,
-    Tracer_Origin = "Bottom", -- Middle or Bottom, se FollowMouse estiver ativado, isso não importa...
-    Tracer_FollowMouse = false,
-    Tracers = true
-}
-local Team_Check = {
-    TeamCheck = false, -- Se TeamColor estiver ativado, isso não importa...
-    Green = Color3.fromRGB(0, 255, 0),
-    Red = Color3.fromRGB(255, 0, 0)
-}
-local TeamColor = true
+local ESP_Properties_Section = _ESP:Section({
+	Name = "ESP Properties",
+	Side = "Left"
+})
 
--- Variáveis principais
-local player = game:GetService("Players").LocalPlayer
-local camera = game:GetService("Workspace").CurrentCamera
-local mouse = player:GetMouse()
+AddValues(ESP_Properties_Section, ESP_Properties.ESP, {}, "ESP_Propreties_")
 
--- Funções utilitárias
-local function NewQuad(thickness, color)
-    local quad = Drawing.new("Quad")
-    quad.Visible = false
-    quad.PointA = Vector2.new(0, 0)
-    quad.PointB = Vector2.new(0, 0)
-    quad.PointC = Vector2.new(0, 0)
-    quad.PointD = Vector2.new(0, 0)
-    quad.Color = color
-    quad.Filled = false
-    quad.Thickness = thickness
-    quad.Transparency = 1
-    return quad
-end
+ESP_Properties_Section:Dropdown({
+	Name = "Text Font",
+	Flag = "ESP_TextFont",
+	Content = Fonts,
+	Default = Fonts[ESP_Properties.ESP.Font + 1],
+	Callback = function(Value)
+		ESP_Properties.ESP.Font = Drawing.Fonts[Value]
+	end
+})
 
-local function NewLine(thickness, color)
-    local line = Drawing.new("Line")
-    line.Visible = false
-    line.From = Vector2.new(0, 0)
-    line.To = Vector2.new(0, 0)
-    line.Color = color
-    line.Thickness = thickness
-    line.Transparency = 1
-    return line
-end
+ESP_Properties_Section:Slider({
+	Name = "Transparency",
+	Flag = "ESP_TextTransparency",
+	Default = ESP_Properties.ESP.Transparency * 10,
+	Min = 1,
+	Max = 10,
+	Callback = function(Value)
+		ESP_Properties.ESP.Transparency = Value / 10
+	end
+})
 
-local function Visibility(state, lib)
-    for _, item in pairs(lib) do
-        item.Visible = state
-    end
-end
+ESP_Properties_Section:Slider({
+	Name = "Font Size",
+	Flag = "ESP_FontSize",
+	Default = ESP_Properties.ESP.Size,
+	Min = 1,
+	Max = 20,
+	Callback = function(Value)
+		ESP_Properties.ESP.Size = Value
+	end
+})
 
-local black = Color3.fromRGB(0, 0, 0)
-local function ESP(plr)
-    local library = {
-        -- Tracer e Tracer Preto (borda preta)
-        blacktracer = NewLine(Settings.Tracer_Thickness * 2, black),
-        tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
-        -- Caixa e Caixa Preta (borda preta)
-        black = NewQuad(Settings.Box_Thickness * 2, black),
-        box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
-        -- Barra de Saúde e Barra de Saúde Verde (parte que se move para cima/baixo)
-        healthbar = NewLine(3, black),
-        greenhealth = NewLine(1.5, black)
-    }
+ESP_Properties_Section:Slider({
+	Name = "Offset",
+	Flag = "ESP_Offset",
+	Default = ESP_Properties.ESP.Offset,
+	Min = 10,
+	Max = 30,
+	Callback = function(Value)
+		ESP_Properties.ESP.Offset = Value
+	end
+})
 
-    local function Colorize(color)
-        for _, item in pairs(library) do
-            if item ~= library.healthbar and item ~= library.greenhealth and item ~= library.blacktracer and item ~= library.black then
-                item.Color = color
-            end
-        end
-    end
+local Tracer_Properties_Section = _ESP:Section({
+	Name = "Tracer Properties",
+	Side = "Right"
+})
 
-    local function Updater()
-        local connection
-        connection = game:GetService("RunService").RenderStepped:Connect(function()
-            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") then
-                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
-                if OnScreen then
-                    local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
-                    local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
+AddValues(Tracer_Properties_Section, ESP_Properties.Tracer, {}, "Tracer_Properties_")
 
-                    local function Size(item)
-                        item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
-                        item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
-                        item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)
-                        item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2)
-                    end
-                    Size(library.box)
-                    Size(library.black)
+Tracer_Properties_Section:Dropdown({
+	Name = "Position",
+	Flag = "Tracer_Position",
+	Content = TracerPositions,
+	Default = TracerPositions[ESP_Properties.Tracer.Position],
+	Callback = function(Value)
+		ESP_Properties.Tracer.Position = tablefind(TracerPositions, Value)
+	end
+})
 
-                    -- Barra de Saúde
-                    local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)).magnitude
-                    local healthoffset = plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth * d
+Tracer_Properties_Section:Slider({
+	Name = "Transparency",
+	Flag = "Tracer_Transparency",
+	Default = ESP_Properties.Tracer.Transparency * 10,
+	Min = 1,
+	Max = 10,
+	Callback = function(Value)
+		ESP_Properties.Tracer.Transparency = Value / 10
+	end
+})
 
-                    library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
-                    library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2 - healthoffset)
+Tracer_Properties_Section:Slider({
+	Name = "Thickness",
+	Flag = "Tracer_Thickness",
+	Default = ESP_Properties.Tracer.Thickness,
+	Min = 1,
+	Max = 5,
+	Callback = function(Value)
+		ESP_Properties.Tracer.Thickness = Value
+	end
+})
 
-                    library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY * 2)
-                    library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY * 2)
+local HeadDot_Properties_Section = _ESP:Section({
+	Name = "Head Dot Properties",
+	Side = "Left"
+})
 
-                    local green = Color3.fromRGB(0, 255, 0)
-                    local red = Color3.fromRGB(255, 0, 0)
+AddValues(HeadDot_Properties_Section, ESP_Properties.HeadDot, {}, "HeadDot_Properties_")
 
-                    library.greenhealth.Color = red:lerp(green, plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth)
+HeadDot_Properties_Section:Slider({
+	Name = "Transparency",
+	Flag = "HeadDot_Transparency",
+	Default = ESP_Properties.HeadDot.Transparency * 10,
+	Min = 1,
+	Max = 10,
+	Callback = function(Value)
+		ESP_Properties.HeadDot.Transparency = Value / 10
+	end
+})
 
-                    if Team_Check.TeamCheck then
-                        if plr.TeamColor == player.TeamColor then
-                            Colorize(Team_Check.Green)
-                        else
-                            Colorize(Team_Check.Red)
-                        end
-                    else
-                        library.tracer.Color = Settings.Tracer_Color
-                        library.box.Color = Settings.Box_Color
-                    end
-                    if TeamColor then
-                        Colorize(plr.TeamColor.Color)
-                    end
-                    Visibility(true, library)
-                else
-                    Visibility(false, library)
-                end
-            else
-                Visibility(false, library)
-                if game.Players:FindFirstChild(plr.Name) == nil then
-                    connection:Disconnect()
-                end
-            end
-        end)
-    end
-    coroutine.wrap(Updater)()
-end
+HeadDot_Properties_Section:Slider({
+	Name = "Thickness",
+	Flag = "HeadDot_Thickness",
+	Default = ESP_Properties.HeadDot.Thickness,
+	Min = 1,
+	Max = 5,
+	Callback = function(Value)
+		ESP_Properties.HeadDot.Thickness = Value
+	end
+})
 
-for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-    if v.Name ~= player.Name then
-        coroutine.wrap(ESP)(v)
-    end
-end
+HeadDot_Properties_Section:Slider({
+	Name = "Sides",
+	Flag = "HeadDot_Sides",
+	Default = ESP_Properties.HeadDot.NumSides,
+	Min = 3,
+	Max = 30,
+	Callback = function(Value)
+		ESP_Properties.HeadDot.NumSides = Value
+	end
+})
 
-game.Players.PlayerAdded:Connect(function(newplr)
-    if newplr.Name ~= player.Name then
-        coroutine.wrap(ESP)(newplr)
-    end
-end)
+local Chams_Properties_Section = _ESP:Section({
+	Name = "Chams Properties",
+	Side = "Right"
+})
 
--- Menu para ESP
-local library = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/Script.lua"))()
-local Main = library:CreateWindow("Menu", "Crimson")
-local tab2 = Main:CreateTab("Esp")
+AddValues(Chams_Properties_Section, ESP_Properties.Chams, {}, "Chams_Properties_")
 
-local ESP_ENABLED = false
-local ESP_TYPE = "Box 2D" -- Valor padrão
+Chams_Properties_Section:Slider({
+	Name = "Transparency",
+	Flag = "Chams_Transparency",
+	Default = ESP_Properties.Chams.Transparency * 10,
+	Min = 1,
+	Max = 10,
+	Callback = function(Value)
+		ESP_Properties.Chams.Transparency = Value / 10
+	end
+})
 
-local function destroyESP()
-    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-        for _, obj in pairs(v.PlayerGui:GetChildren()) do
-            if obj:IsA("Drawing") then
-                obj:Remove()
-            end
-        end
-    end
-end
+Chams_Properties_Section:Slider({
+	Name = "Thickness",
+	Flag = "Chams_Thickness",
+	Default = ESP_Properties.Chams.Thickness,
+	Min = 1,
+	Max = 5,
+	Callback = function(Value)
+		ESP_Properties.Chams.Thickness = Value
+	end
+})
 
-tab2:CreateCheckbox("ESP", function(state)
-    ESP_ENABLED = state
-    if ESP_ENABLED then
-        if ESP_TYPE == "Box 2D" then
-            for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-                if v.Name ~= player.Name then
-                    coroutine.wrap(ESP)(v)
-                end
-            end
-            game.Players.PlayerAdded:Connect(function(newplr)
-                if newplr.Name ~= player.Name then
-                    coroutine.wrap(ESP)(newplr)
-                end
-            end)
-        end
-        print("ESP ativado:", ESP_TYPE)
-    else
-        destroyESP()
-        print("ESP desativado")
-    end
-end)
+local Box_Properties_Section = _ESP:Section({
+	Name = "Box Properties",
+	Side = "Left"
+})
 
-tab2:CreateDropdown("ESP Options", {"Box 2D", "Box 3D", "Glow"}, function(option)
-    destroyESP() -- Destrua o ESP ativo antes de ativar o novo
-    ESP_TYPE = option
-    if ESP_ENABLED then
-        if ESP_TYPE == "Box 2D" then
-            for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-                if v.Name ~= player.Name then
-                    coroutine.wrap(ESP)(v)
-                end
-            end
-            game.Players.PlayerAdded:Connect(function(newplr)
-                if newplr.Name ~= player.Name then
-                    coroutine.wrap(ESP)(newplr)
-                end
-            end)
-        end
-        print("ESP ativado:", ESP_TYPE)
-    end
-end)
+AddValues(Box_Properties_Section, ESP_Properties.Box, {}, "Box_Properties_")
 
-Main:Show()
+Box_Properties_Section:Slider({
+	Name = "Transparency",
+	Flag = "Box_Transparency",
+	Default = ESP_Properties.Box.Transparency * 10,
+	Min = 1,
+	Max = 10,
+	Callback = function(Value)
+		ESP_Properties.Box.Transparency = Value / 10
+	end
+})
+
+Box_Properties_Section:Slider({
+	Name = "Thickness",
+	Flag = "Box_Thickness",
+	Default = ESP_Properties.Box.Thickness,
+	Min = 1,
+	Max = 5,
+	Callback = function(Value)
+		ESP_Properties.Box.Thickness = Value
+	end
+})
+
+local HealthBar_Properties_Section = _ESP:Section({
+	Name = "Health Bar Properties",
+	Side = "Right"
+})
+
+AddValues(HealthBar_Properties_Section, ESP_Properties.HealthBar, {}, "HealthBar_Properties_")
+
+HealthBar_Properties_Section:Dropdown({
+	Name = "Position",
+	Flag = "HealthBar_Position",
+	Content = HealthBarPositions,
+	Default = HealthBarPositions[ESP_Properties.HealthBar.Position],
+	Callback = function(Value)
+		ESP_Properties.HealthBar.Position = tablefind(HealthBarPositions, Value)
+	end
+})
+
+HealthBar_Properties_Section:Slider({
+	Name = "Transparency",
+	Flag = "HealthBar_Transparency",
+	Default = ESP_Properties.HealthBar.Transparency * 10,
+	Min = 1,
+	Max = 10,
+	Callback = function(Value)
+		ESP_Properties.HealthBar.Transparency = Value / 10
+	end
+})
+
+HealthBar_Properties_Section:Slider({
+	Name = "Thickness",
+	Flag = "HealthBar_Thickness",
+	Default = ESP_Properties.HealthBar.Thickness,
+	Min = 1,
+	Max = 5,
+	Callback = function(Value)
+		ESP_Properties.HealthBar.Thickness = Value
+	end
+})
+
+HealthBar_Properties_Section:Slider({
+	Name = "Offset",
+	Flag = "HealthBar_Offset",
+	Default = ESP_Properties.HealthBar.Offset,
+	Min = 4,
+	Max = 12,
+	Callback = function(Value)
+		ESP_Properties.HealthBar.Offset = Value
+	end
+})
+
+HealthBar_Properties_Section:Slider({
+	Name = "Blue",
+	Flag = "HealthBar_Blue",
+	Default = ESP_Properties.HealthBar.Blue,
+	Min = 0,
+	Max = 255,
+	Callback = function(Value)
+		ESP_Properties.HealthBar.Blue = Value
+	end
+})
