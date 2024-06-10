@@ -112,26 +112,53 @@ local function createMenu()
     end)
 
     local ESP_ENABLED = false
+    local ESP_TYPE = ""
 
-    tab2:CreateCheckbox("Esp", function(state)
-        if state then
-            ESP_ENABLED = true
-            loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp.lua"))()
-            print("ESP ativado")
-        else
-            ESP_ENABLED = false
-            -- Destrua todos os elementos de GUI com o nome 'ESP'
-            for _, v in pairs(Players.LocalPlayer.PlayerGui:GetDescendants()) do
-                if v.Name == 'ESP' then
-                    v:Destroy()
-                end
+    local function destroyESP()
+        -- Destrua todos os elementos de GUI com o nome 'ESP'
+        for _, v in pairs(Players.LocalPlayer.PlayerGui:GetDescendants()) do
+            if v.Name == 'ESP' then
+                v:Destroy()
             end
+        end
+    end
+
+    tab2:CreateCheckbox("ESP", function(state)
+        ESP_ENABLED = state
+        if ESP_ENABLED then
+            if ESP_TYPE == "" then
+                print("Selecione uma opção de ESP antes de ativar.")
+                ESP_ENABLED = false
+                return
+            end
+            destroyESP()
+            if ESP_TYPE == "Box 2D" then
+                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%202d.lua"))()
+            elseif ESP_TYPE == "Box 3D" then
+                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%203d.lua"))()
+            elseif ESP_TYPE == "Glow" then
+                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/yourusername/yourrepo/main/espglow.lua"))()
+            end
+            print("ESP ativado:", ESP_TYPE)
+        else
+            destroyESP()
             print("ESP desativado")
         end
     end)
 
-    tab2:CreateDropdown("options", {"Box 2D", "Box 3D", "glow"}, function(a)
-        print(a)
+    tab2:CreateDropdown("ESP Options", {"Box 2D", "Box 3D", "Glow"}, function(option)
+        destroyESP() -- Destrua o ESP ativo antes de ativar o novo
+        ESP_TYPE = option
+        if ESP_ENABLED then
+            if ESP_TYPE == "Box 2D" then
+                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%202d.lua"))()
+            elseif ESP_TYPE == "Box 3D" then
+                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%203d.lua"))()
+            elseif ESP_TYPE == "Glow" then
+                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/yourusername/yourrepo/main/espglow.lua"))()
+            end
+            print("ESP ativado:", ESP_TYPE)
+        end
     end)
 
     tab:Show()
