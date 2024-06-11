@@ -10,7 +10,7 @@ repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild("HumanoidR
 
 warn("UI Loaded.")
 
-local Fully_Support_Exploits = {"Solara", "Wave"}
+local Fully_Support_Exploits = {"Krnl", "Synapse X"}
 
 local Tween = game:GetService("TweenService")
 local Tweeninfo = TweenInfo.new
@@ -128,7 +128,7 @@ function CFAHub:DraggingEnabled(frame, parent)
     end)
 end
 
-local GuiName = "Shoot Script"
+local GuiName = "CFAHubPremium2022"
 
 function CFAHub:CreateWindow(title, gameName, intro)
     title = title or "<font color=\"#1CB2F5\">CFA Hub Premium</font>"
