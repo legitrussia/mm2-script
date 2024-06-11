@@ -1,6 +1,4 @@
--- Radar Hack Script
-
--- Services
+-- Made by Blissful#4992
 local Players = game:service("Players")
 local Player = Players.LocalPlayer
 local Mouse = Player:GetMouse()
@@ -8,11 +6,28 @@ local Camera = game:service("Workspace").CurrentCamera
 local RS = game:service("RunService")
 local UIS = game:service("UserInputService")
 
--- Radar Info
+repeat wait() until Player.Character ~= nil and Player.Character.PrimaryPart ~= nil
+
+local LerpColorModule = loadstring(game:HttpGet("https://pastebin.com/raw/wRnsJeid"))()
+local HealthBarLerp = LerpColorModule:Lerp(Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0))
+
+local function NewCircle(Transparency, Color, Radius, Filled, Thickness)
+    local c = Drawing.new("Circle")
+    c.Transparency = Transparency
+    c.Color = Color
+    c.Visible = false
+    c.Thickness = Thickness
+    c.Position = Vector2.new(0, 0)
+    c.Radius = Radius
+    c.NumSides = math.clamp(Radius*55/100, 10, 75)
+    c.Filled = Filled
+    return c
+end
+
 local RadarInfo = {
     Position = Vector2.new(200, 200),
     Radius = 100,
-    Scale = 1,
+    Scale = 1, -- Determinant factor on the effect of the relative position for the 2D integration
     RadarBack = Color3.fromRGB(10, 10, 10),
     RadarBorder = Color3.fromRGB(75, 75, 75),
     LocalPlayerDot = Color3.fromRGB(255, 255, 255),
@@ -23,22 +38,14 @@ local RadarInfo = {
     Team_Check = true
 }
 
--- Radar Background and Border
-local RadarBackground = Drawing.new("Circle")
-RadarBackground.Transparency = 0.9
-RadarBackground.Color = RadarInfo.RadarBack
-RadarBackground.Radius = RadarInfo.Radius
-RadarBackground.Position = RadarInfo.Position
+local RadarBackground = NewCircle(0.9, RadarInfo.RadarBack, RadarInfo.Radius, true, 1)
 RadarBackground.Visible = true
+RadarBackground.Position = RadarInfo.Position
 
-local RadarBorder = Drawing.new("Circle")
-RadarBorder.Transparency = 0.75
-RadarBorder.Color = RadarInfo.RadarBorder
-RadarBorder.Radius = RadarInfo.Radius
-RadarBorder.Position = RadarInfo.Position
+local RadarBorder = NewCircle(0.75, RadarInfo.RadarBorder, RadarInfo.Radius, false, 3)
 RadarBorder.Visible = true
+RadarBorder.Position = RadarInfo.Position
 
--- Function to get relative position
 local function GetRelative(pos)
     local char = Player.Character
     if char ~= nil and char.PrimaryPart ~= nil then
@@ -52,29 +59,24 @@ local function GetRelative(pos)
     end
 end
 
--- Function to place dot on radar
 local function PlaceDot(plr)
-    local PlayerDot = Drawing.new("Circle")
-    PlayerDot.Transparency = 1
-    PlayerDot.Color = RadarInfo.PlayerDot
-    PlayerDot.Radius = 3
-    PlayerDot.Position = Vector2.new(0, 0)
-    PlayerDot.Visible = false
+    local PlayerDot = NewCircle(1, RadarInfo.PlayerDot, 3, true, 1)
 
     local function Update()
-        local c = RS.RenderStepped:Connect(function()
+        local c 
+        c = game:service("RunService").RenderStepped:Connect(function()
             local char = plr.Character
             if char and char:FindFirstChildOfClass("Humanoid") and char.PrimaryPart ~= nil and char:FindFirstChildOfClass("Humanoid").Health > 0 then
                 local hum = char:FindFirstChildOfClass("Humanoid")
                 local scale = RadarInfo.Scale
                 local relx, rely = GetRelative(char.PrimaryPart.Position)
-                local newpos = RadarInfo.Position - Vector2.new(relx * scale, rely * scale)
-
-                if (newpos - RadarInfo.Position).magnitude < RadarInfo.Radius - 2 then
-                    PlayerDot.Radius = 3
+                local newpos = RadarInfo.Position - Vector2.new(relx * scale, rely * scale) 
+                
+                if (newpos - RadarInfo.Position).magnitude < RadarInfo.Radius-2 then 
+                    PlayerDot.Radius = 3   
                     PlayerDot.Position = newpos
                     PlayerDot.Visible = true
-                else
+                else 
                     local dist = (RadarInfo.Position - newpos).magnitude
                     local calc = (RadarInfo.Position - newpos).unit * (dist - RadarInfo.Radius)
                     local inside = Vector2.new(newpos.X + calc.X, newpos.Y + calc.Y)
@@ -95,7 +97,7 @@ local function PlaceDot(plr)
                 if RadarInfo.Health_Color then
                     PlayerDot.Color = HealthBarLerp(hum.Health / hum.MaxHealth)
                 end
-            else
+            else 
                 PlayerDot.Visible = false
                 if Players:FindFirstChild(plr.Name) == nil then
                     PlayerDot:Remove()
@@ -107,7 +109,12 @@ local function PlaceDot(plr)
     coroutine.wrap(Update)()
 end
 
--- Function to create local player dot
+for _,v in pairs(Players:GetChildren()) do
+    if v.Name ~= Player.Name then
+        PlaceDot(v)
+    end
+end
+
 local function NewLocalDot()
     local d = Drawing.new("Triangle")
     d.Visible = true
@@ -120,12 +127,20 @@ local function NewLocalDot()
     return d
 end
 
--- Create local player dot
 local LocalPlayerDot = NewLocalDot()
+
+Players.PlayerAdded:Connect(function(v)
+    if v.Name ~= Player.Name then
+        PlaceDot(v)
+    end
+    LocalPlayerDot:Remove()
+    LocalPlayerDot = NewLocalDot()
+end)
 
 -- Loop
 coroutine.wrap(function()
-    local c = RS.RenderStepped:Connect(function()
+    local c 
+    c = game:service("RunService").RenderStepped:Connect(function()
         if LocalPlayerDot ~= nil then
             LocalPlayerDot.Color = RadarInfo.LocalPlayerDot
             LocalPlayerDot.PointA = RadarInfo.Position + Vector2.new(0, -6)
@@ -143,7 +158,7 @@ coroutine.wrap(function()
 end)()
 
 -- Draggable
-local inset = game:GetService("GuiService")
+local inset = game:service("GuiService"):GetGuiInset()
 
 local dragging = false
 local offset = Vector2.new(0, 0)
@@ -161,18 +176,13 @@ UIS.InputEnded:Connect(function(input)
 end)
 
 coroutine.wrap(function()
-    local dot = Drawing.new("Circle")
-    dot.Transparency = 1
-    dot.Color = Color3.fromRGB(255, 255, 255)
-    dot.Radius = 3
-    dot.Position = Vector2.new(0, 0)
-    dot.Visible = false
-
-    local c = RS.RenderStepped:Connect(function()
+    local dot = NewCircle(1, Color3.fromRGB(255, 255, 255), 3, true, 1)
+    local c 
+    c = game:service("RunService").RenderStepped:Connect(function()
         if (Vector2.new(Mouse.X, Mouse.Y + inset.Y) - RadarInfo.Position).magnitude < RadarInfo.Radius then
             dot.Position = Vector2.new(Mouse.X, Mouse.Y + inset.Y)
             dot.Visible = true
-        else
+        else 
             dot.Visible = false
         end
         if dragging then
@@ -181,39 +191,9 @@ coroutine.wrap(function()
     end)
 end)()
 
--- Radar Hack Toggle
-local RadarHackEnabled = true
-local RadarHackToggle = false
-
--- Function to toggle Radar Hack
-local function ToggleRadarHackMenu()
-    RadarHackToggle = not RadarHackToggle
-    if RadarHackToggle then
-        RadarHackEnabled = true
-        ToggleRadarHack(RadarHackEnabled)
-    else
-        RadarHackEnabled = false
-        ToggleRadarHack(RadarHackEnabled)
-    end
-end
-
--- Function to toggle Radar Hack
-local function ToggleRadarHack(enabled)
-    RadarBackground.Visible = enabled
-    RadarBorder.Visible = enabled
-    for _, dot in pairs(Player.PlayerGui:GetDescendants()) do
-        if dot:IsA("Drawing") then
-            dot.Visible = enabled
-        end
-    end
-end
-
--- Bind the function to a key or button press to toggle Radar Hack
-UIS.InputBegan:Connect(function(input)
-    if input.KeyCode == Enum.KeyCode.Y then
-        ToggleRadarHackMenu()
-    end
-end)
-
--- Example usage: Activate Radar Hack by default
-ToggleRadarHack(RadarHackEnabled)
+--[[ Example:
+wait(3)
+RadarInfo.Position = Vector2.new(300, 300)
+RadarInfo.Radius = 150
+RadarInfo.RadarBack = Color3.fromRGB(50, 0, 0)
+]]
