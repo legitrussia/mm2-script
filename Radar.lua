@@ -109,12 +109,6 @@ local function PlaceDot(plr)
     coroutine.wrap(Update)()
 end
 
-for _,v in pairs(Players:GetChildren()) do
-    if v.Name ~= Player.Name then
-        PlaceDot(v)
-    end
-end
-
 local function NewLocalDot()
     local d = Drawing.new("Triangle")
     d.Visible = true
@@ -144,51 +138,56 @@ coroutine.wrap(function()
         if LocalPlayerDot ~= nil then
             LocalPlayerDot.Color = RadarInfo.LocalPlayerDot
             LocalPlayerDot.PointA = RadarInfo.Position + Vector2.new(0, -6)
-            LocalPlayerDot.PointB = RadarInfo.Position + Vector2.new(-3, 6)
-            LocalPlayerDot.PointC = RadarInfo.Position + Vector2.new(3, 6)
-        end
-        RadarBackground.Position = RadarInfo.Position
-        RadarBackground.Radius = RadarInfo.Radius
-        RadarBackground.Color = RadarInfo.RadarBack
+            LocalPlayerDot.PointB = RadarInfo.Position + Vector2.new(-3, -6)
+                LocalPlayerDot.PointC = RadarInfo.Position + Vector2.new(3, 6)
+ end
+ RadarBackground.Position = RadarInfo.Position
+ RadarBackground.Radius = RadarInfo.Radius
+ RadarBackground.Color = RadarInfo.RadarBack
 
-        RadarBorder.Position = RadarInfo.Position
-        RadarBorder.Radius = RadarInfo.Radius
-        RadarBorder.Color = RadarInfo.RadarBorder
-    end)
+ RadarBorder.Position = RadarInfo.Position
+ RadarBorder.Radius = RadarInfo.Radius
+ RadarBorder.Color = RadarInfo.RadarBorder
+                end)
 end)()
-
 -- Draggable
-local inset = game:service("GuiService"):GetGuiInset()
+local inset = game
+("GuiService")
+()
 
 local dragging = false
 local offset = Vector2.new(0, 0)
-UIS.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and (Vector2.new(Mouse.X, Mouse.Y + inset.Y) - RadarInfo.Position).magnitude < RadarInfo.Radius then
-        offset = RadarInfo.Position - Vector2.new(Mouse.X, Mouse.Y)
-        dragging = true
-    end
+UIS.InputBegan
+(function(input)
+if input.UserInputType == Enum.UserInputType.MouseButton1 and (Vector2.new(Mouse.X, Mouse.Y + inset.Y) - RadarInfo.Position).magnitude < RadarInfo.Radius then
+offset = RadarInfo.Position - Vector2.new(Mouse.X, Mouse.Y)
+dragging = true
+end
 end)
 
-UIS.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
+UIS.InputEnded
+(function(input)
+if input.UserInputType == Enum.UserInputType.MouseButton1 then
+dragging = false
+end
 end)
 
 coroutine.wrap(function()
-    local dot = NewCircle(1, Color3.fromRGB(255, 255, 255), 3, true, 1)
-    local c 
-    c = game:service("RunService").RenderStepped:Connect(function()
-        if (Vector2.new(Mouse.X, Mouse.Y + inset.Y) - RadarInfo.Position).magnitude < RadarInfo.Radius then
-            dot.Position = Vector2.new(Mouse.X, Mouse.Y + inset.Y)
-            dot.Visible = true
-        else 
-            dot.Visible = false
-        end
-        if dragging then
-            RadarInfo.Position = Vector2.new(Mouse.X, Mouse.Y) + offset
-        end
-    end)
+local dot = NewCircle(1, Color3.fromRGB(255, 255, 255), 3, true, 1)
+local c
+c = game
+("RunService").RenderStepped
+(function()
+if (Vector2.new(Mouse.X, Mouse.Y + inset.Y) - RadarInfo.Position).magnitude < RadarInfo.Radius then
+dot.Position = Vector2.new(Mouse.X, Mouse.Y + inset.Y)
+dot.Visible = true
+else
+dot.Visible = false
+end
+if dragging then
+RadarInfo.Position = Vector2.new(Mouse.X, Mouse.Y) + offset
+end
+end)
 end)()
 
 --[[ Example:
@@ -197,3 +196,36 @@ RadarInfo.Position = Vector2.new(300, 300)
 RadarInfo.Radius = 150
 RadarInfo.RadarBack = Color3.fromRGB(50, 0, 0)
 ]]
+
+-- Radar Hack Toggle
+local RadarHackEnabled = true -- Default: Enabled
+
+local function ToggleRadarHack(enabled)
+RadarBackground.Visible = enabled
+RadarBorder.Visible = enabled
+for _, dot in pairs(Player.PlayerGui
+()) do
+if dot
+("Drawing") then
+dot.Visible = enabled
+end
+end
+end
+
+-- Function to toggle Radar Hack
+local function ToggleRadarHackMenu()
+RadarHackEnabled = not RadarHackEnabled
+ToggleRadarHack(RadarHackEnabled)
+end
+
+-- Example usage: Activate Radar Hack by default
+ToggleRadarHack(RadarHackEnabled)
+
+-- Bind the function to a key or button press to toggle Radar Hack
+-- Replace "KeyCode Enum" with the desired key/button
+UIS.InputBegan
+(function(input)
+if input.KeyCode == Enum.KeyCode.Y then
+ToggleRadarHackMenu()
+end
+end)
