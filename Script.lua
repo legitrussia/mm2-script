@@ -1,4 +1,4 @@
-local uilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kiet1308/tvkhub/main/rac"))()
+local uilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/legitrussia/mm2-script/main/Menu%20library.lua"))()
 local windowz = uilibrary:CreateWindow("Shoot Scripts", true)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
