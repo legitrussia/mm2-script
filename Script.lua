@@ -1,3 +1,5 @@
+local uilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kiet1308/tvkhub/main/rac"))()
+local windowz = uilibrary:CreateWindow("Shoot Scripts", true)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -150,9 +152,6 @@ local function espplr(p)
         p.Character.HumanoidRootPart.CFrame * CFrame.new(-2, -3, -2).p
     )
 end
-
-local uilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kiet1308/tvkhub/main/rac"))()
-local windowz = uilibrary:CreateWindow("Shoot Scripts", true)
 
 local Page1 = windowz:CreatePage("Aimbot")
 local Page2 = windowz:CreatePage("Esp")
