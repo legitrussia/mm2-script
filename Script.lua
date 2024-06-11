@@ -1,9 +1,20 @@
-local uilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/legitrussia/mm2-script/main/Menu%20library.lua"))()
-local windowz = uilibrary:CreateWindow("Shoot Scripts", true)
+local uilibrary = loadstring(game:HttpGet('https://raw.githubusercontent.com/cueshut/saves/main/criminality%20paste%20ui%20library'))()
+
+-- // Window \\ --
+local window = uilibrary.new('Shoot Scripts', 'leadmarker')
+
+-- // Tabs \\ --
+local aimbotTab = window.new_tab('rbxassetid://4483345998')
+local espTab = window.new_tab('rbxassetid://4483345998')
+
+-- // Sections \\ --
+local aimbotSection = aimbotTab.new_section('Aimbot')
+local espSection = espTab.new_section('ESP')
+
+-- // Services and Variables \\ --
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Holding = false
@@ -153,47 +164,43 @@ local function espplr(p)
     )
 end
 
-local Page1 = windowz:CreatePage("Aimbot")
-local Page2 = windowz:CreatePage("Esp")
-local Page3 = windowz:CreatePage("Misc")
+-- // Aimbot Sector \\ --
+local aimbotSector = aimbotSection.new_sector('Aimbot', 'Left')
 
-local Section1 = Page1:CreateSection("Aimbot")
-
-Section1:CreateToggle("Aimbot", {Toggled=false, Description = false}, function(state)
-    ToggleAimbot(state)
+aimbotSector.element('Toggle', 'Aimbot', false, function(state)
+    ToggleAimbot(state.Toggle)
 end)
 
-Section1:CreateToggle("Fov View", {Toggled=false, Description = false}, function(state)
-    toggleFOVCircle(state)
-    _G.FOVEnabled = state
-    print("FOV View ativado:", state)
+aimbotSector.element('Toggle', 'Fov View', false, function(state)
+    toggleFOVCircle(state.Toggle)
+    _G.FOVEnabled = state.Toggle
+    print("FOV View ativado:", state.Toggle)
 end)
 
-Section1:CreateSlider("Smoothness", {Min = 1, Max = 10, DefaultValue = 1}, function(value)
-    _G.Sensitivity = value / 10
-    print("Smoothness set to:", value)
+aimbotSector.element('Slider', 'Smoothness', {default = {min = 1, max = 10, default = 1}}, function(value)
+    _G.Sensitivity = value.Slider / 10
+    print("Smoothness set to:", value.Slider)
 end)
 
-Section1:CreateDropdown("Aim Part", {
-    List = {"Head", "Neck", "Torso"},
-    Default = "Head"}, function(selected)
-        _G.AimPart = selected
-        print("Aim Part set to:", selected)
+aimbotSector.element('Dropdown', 'Aim Part', {options = {"Head", "Neck", "Torso"}}, function(selected)
+    _G.AimPart = selected.Dropdown
+    print("Aim Part set to:", selected.Dropdown)
 end)
 
-Section1:CreateSlider("FOV", {Min = 0, Max = 180, DefaultValue = 50}, function(value)
-    _G.FOV = value
-    updateFOVCircle(value)
-    print("FOV set to:", value)
+aimbotSector.element('Slider', 'FOV', {default = {min = 0, max = 180, default = 50}}, function(value)
+    _G.FOV = value.Slider
+    updateFOVCircle(value.Slider)
+    print("FOV set to:", value.Slider)
 end)
 
-local Section2 = Page1:CreateSection("ESP")
+-- // ESP Sector \\ --
+local espSector = espSection.new_sector('ESP', 'Left')
 
 local ESP_ENABLED = false
 local ESP_TYPE = ""
 
-Section2:CreateToggle("ESP", {Toggled=false, Description = false}, function(state)
-    ESP_ENABLED = state
+espSector.element('Toggle', 'ESP', false, function(state)
+    ESP_ENABLED = state.Toggle
     if ESP_ENABLED then
         if ESP_TYPE == "" then
             print("Selecione uma opção de ESP antes de ativar.")
@@ -215,21 +222,19 @@ Section2:CreateToggle("ESP", {Toggled=false, Description = false}, function(stat
     end
 end)
 
-Section2:CreateDropdown("ESP Options", {
-    List = {"Box 2D", "Box 3D", "Glow"},
-    Default = "None"}, function(option)
-        destroyESP() -- Destrua o ESP ativo antes de ativar o novo
-        ESP_TYPE = option
-        if ESP_ENABLED then
-            if ESP_TYPE == "Box 2D" then
-                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%202d.lua"))()
-            elseif ESP_TYPE == "Box 3D" then
-                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%203d.lua"))()
-            elseif ESP_TYPE == "Glow" then
-                loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/yourusername/yourrepo/main/espglow.lua"))()
-            end
-            print("ESP ativado:", ESP_TYPE)
+espSector.element('Dropdown', 'ESP Options', {options = {"Box 2D", "Box 3D", "Glow"}}, function(option)
+    destroyESP() -- Destrua o ESP ativo antes de ativar o novo
+    ESP_TYPE = option.Dropdown
+    if ESP_ENABLED then
+        if ESP_TYPE == "Box 2D" then
+            loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%202d.lua"))()
+        elseif ESP_TYPE == "Box 3D" then
+            loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/legitrussia/mm2-script/main/esp%203d.lua"))()
+        elseif ESP_TYPE == "Glow" then
+            loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/yourusername/yourrepo/main/espglow.lua"))()
         end
+        print("ESP ativado:", ESP_TYPE)
+    end
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -240,9 +245,9 @@ end)
 
 local function toggleMenu()
     if MenuOpen then
-        windowz:Hide()
+        window:Hide()
     else
-        windowz:Show()
+        window:Show()
     end
     MenuOpen = not MenuOpen
 end
