@@ -152,9 +152,11 @@ local function espplr(p)
 end
 
 local uilibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kiet1308/tvkhub/main/rac"))()
-local windowz = uilibrary:CreateWindow("UI Library", "Game Name", true)
+local windowz = uilibrary:CreateWindow("Shoot Scripts", true)
 
-local Page1 = windowz:CreatePage("Page I")
+local Page1 = windowz:CreatePage("Aimbot")
+local Page2 = windowz:CreatePage("Esp")
+local Page3 = windowz:CreatePage("Misc")
 
 local Section1 = Page1:CreateSection("Aimbot")
 
