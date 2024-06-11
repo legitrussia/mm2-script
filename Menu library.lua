@@ -581,7 +581,7 @@ function CFAHub:CreateWindow(title, gameName, intro)
     Title.Size = UDim2.new(0, 625, 0, 29)
     Title.ZIndex = 2
     Title.Font = Enum.Font.SourceSansSemibold
-    Title.Text = title .. " - " .. gameName
+    Title.Text = title .. "Shoot script" .. gameName
     Title.RichText = true
     Title.TextColor3 = themes.TextColor
     Objects[Title] = "TextColor"
