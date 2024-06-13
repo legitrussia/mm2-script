@@ -1,145 +1,140 @@
--- Settings
+-- Preview: https://cdn.discordapp.com/attachments/796378086446333984/818089455897542687/unknown.png
+-- Made by Blissful#4992
 local Settings = {
-    Box_Color = Color3.fromRGB(255, 255, 255),
-    Box_Thickness = 2,
-    Team_Check = false,
-    Team_Color = false,
-    Autothickness = true
+    Box_Color = Color3.fromRGB(255, 0, 0),
+    Tracer_Color = Color3.fromRGB(255, 0, 0),
+    Tracer_Thickness = 1,
+    Box_Thickness = 1,
+    Tracer_Origin = "Bottom", -- Middle or Bottom if FollowMouse is on this won't matter...
+    Tracer_FollowMouse = false,
+    Tracers = true
 }
+local Team_Check = {
+    TeamCheck = false, -- if TeamColor is on this won't matter...
+    Green = Color3.fromRGB(0, 255, 0),
+    Red = Color3.fromRGB(255, 0, 0)
+}
+local TeamColor = true
 
---Locals
-local Space = game:GetService("Workspace")
-local Player = game:GetService("Players").LocalPlayer
-local Camera = Space.CurrentCamera
+--// SEPARATION
+local player = game:GetService("Players").LocalPlayer
+local camera = game:GetService("Workspace").CurrentCamera
+local mouse = player:GetMouse()
 
--- Locals
-local function NewLine(color, thickness)
+local function NewQuad(thickness, color)
+    local quad = Drawing.new("Quad")
+    quad.Visible = false
+    quad.PointA = Vector2.new(0,0)
+    quad.PointB = Vector2.new(0,0)
+    quad.PointC = Vector2.new(0,0)
+    quad.PointD = Vector2.new(0,0)
+    quad.Color = color
+    quad.Filled = false
+    quad.Thickness = thickness
+    quad.Transparency = 1
+    return quad
+end
+
+local function NewLine(thickness, color)
     local line = Drawing.new("Line")
     line.Visible = false
     line.From = Vector2.new(0, 0)
     line.To = Vector2.new(0, 0)
-    line.Color = color
+    line.Color = color 
     line.Thickness = thickness
     line.Transparency = 1
     return line
 end
 
-local function Vis(lib, state)
-    for i, v in pairs(lib) do
-        v.Visible = state
+local function Visibility(state, lib)
+    for u, x in pairs(lib) do
+        x.Visible = state
     end
 end
 
-local function Colorize(lib, color)
-    for i, v in pairs(lib) do
-        v.Color = color
-    end
+local function ToColor3(col) --Function to convert, just cuz c;
+    local r = col.r --Red value
+    local g = col.g --Green value
+    local b = col.b --Blue value
+    return Color3.new(r,g,b); --Color3 datatype, made of the RGB inputs
 end
 
---Main Draw Function
-local function Main(plr)
-    repeat wait() until plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil
-    local R15
-    if plr.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
-        R15 = true
-    else
-        R15 = false
-    end
-    local Library = {
-        TL1 = NewLine(Settings.Box_Color, Settings.Box_Thickness),
-        TL2 = NewLine(Settings.Box_Color, Settings.Box_Thickness),
-
-        TR1 = NewLine(Settings.Box_Color, Settings.Box_Thickness),
-        TR2 = NewLine(Settings.Box_Color, Settings.Box_Thickness),
-
-        BL1 = NewLine(Settings.Box_Color, Settings.Box_Thickness),
-        BL2 = NewLine(Settings.Box_Color, Settings.Box_Thickness),
-
-        BR1 = NewLine(Settings.Box_Color, Settings.Box_Thickness),
-        BR2 = NewLine(Settings.Box_Color, Settings.Box_Thickness)
+local black = Color3.fromRGB(0, 0 ,0)
+local function ESP(plr)
+    local library = {
+        --//Tracer and Black Tracer(black border)
+        blacktracer = NewLine(Settings.Tracer_Thickness*2, black),
+        tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
+        --//Box and Black Box(black border)
+        black = NewQuad(Settings.Box_Thickness*2, black),
+        box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
+        --//Bar and Green Health Bar (part that moves up/down)
+        healthbar = NewLine(3, black),
+        greenhealth = NewLine(1.5, black)
     }
-    local oripart = Instance.new("Part")
-    oripart.Parent = Space
-    oripart.Transparency = 1
-    oripart.CanCollide = false
-    oripart.Size = Vector3.new(1, 1, 1)
-    oripart.Position = Vector3.new(0, 0, 0)
-    --Updater Loop
+
+    local function Colorize(color)
+        for u, x in pairs(library) do
+            if x ~= library.healthbar and x ~= library.greenhealth and x ~= library.blacktracer and x ~= library.black then
+                x.Color = color
+            end
+        end
+    end
+
     local function Updater()
-        local c
-        c = game:GetService("RunService").RenderStepped:Connect(function()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
             if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") ~= nil then
-                local Hum = plr.Character
-                local HumPos, vis = Camera:WorldToViewportPoint(Hum.HumanoidRootPart.Position)
-                if vis then
-                    oripart.Size = Vector3.new(Hum.HumanoidRootPart.Size.X, Hum.HumanoidRootPart.Size.Y*1.5, Hum.HumanoidRootPart.Size.Z)
-                    oripart.CFrame = CFrame.new(Hum.HumanoidRootPart.CFrame.Position, Camera.CFrame.Position)
-                    local SizeX = oripart.Size.X
-                    local SizeY = oripart.Size.Y
-                    local TL = Camera:WorldToViewportPoint((oripart.CFrame * CFrame.new(SizeX, SizeY, 0)).p)
-                    local TR = Camera:WorldToViewportPoint((oripart.CFrame * CFrame.new(-SizeX, SizeY, 0)).p)
-                    local BL = Camera:WorldToViewportPoint((oripart.CFrame * CFrame.new(SizeX, -SizeY, 0)).p)
-                    local BR = Camera:WorldToViewportPoint((oripart.CFrame * CFrame.new(-SizeX, -SizeY, 0)).p)
-
-                    if Settings.Team_Check then
-                        if plr.TeamColor == Player.TeamColor then
-                            Colorize(Library, Color3.fromRGB(0, 255, 0))
-                        else
-                            Colorize(Library, Color3.fromRGB(255, 0, 0))
-                        end
+                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
+                    local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
+                    
+                    local function Size(item)
+                        item.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY*2)
+                        item.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2)
+                        item.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)
+                        item.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY*2)
                     end
+                    Size(library.box)
+                    Size(library.black)
 
-                    if Settings.Team_Color then
-                        Colorize(Library, plr.TeamColor.Color)
-                    end
+                    --// Health Bar
+                    local d = (Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY*2) - Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY*2)).magnitude 
+                    local healthoffset = plr.Character.Humanoid.Health/plr.Character.Humanoid.MaxHealth * d
 
-                    local ratio = (Camera.CFrame.p - Hum.HumanoidRootPart.Position).magnitude
-                    local offset = math.clamp(1/ratio*750, 2, 300)
+                    library.greenhealth.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2)
+                    library.greenhealth.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2 - healthoffset)
 
-                    Library.TL1.From = Vector2.new(TL.X, TL.Y)
-                    Library.TL1.To = Vector2.new(TL.X + offset, TL.Y)
-                    Library.TL2.From = Vector2.new(TL.X, TL.Y)
-                    Library.TL2.To = Vector2.new(TL.X, TL.Y + offset)
+                    library.healthbar.From = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y + DistanceY*2)
+                    library.healthbar.To = Vector2.new(HumPos.X - DistanceY - 4, HumPos.Y - DistanceY*2)
 
-                    Library.TR1.From = Vector2.new(TR.X, TR.Y)
-                    Library.TR1.To = Vector2.new(TR.X - offset, TR.Y)
-                    Library.TR2.From = Vector2.new(TR.X, TR.Y)
-                    Library.TR2.To = Vector2.new(TR.X, TR.Y + offset)
+                    local green = Color3.fromRGB(0, 255, 0)
+                    local red = Color3.fromRGB(255, 0, 0)
 
-                    Library.BL1.From = Vector2.new(BL.X, BL.Y)
-                    Library.BL1.To = Vector2.new(BL.X + offset, BL.Y)
-                    Library.BL2.From = Vector2.new(BL.X, BL.Y)
-                    Library.BL2.To = Vector2.new(BL.X, BL.Y - offset)
+                    library.greenhealth.Color = red:lerp(green, plr.Character.Humanoid.Health/plr.Character.Humanoid.MaxHealth);
 
-                    Library.BR1.From = Vector2.new(BR.X, BR.Y)
-                    Library.BR1.To = Vector2.new(BR.X - offset, BR.Y)
-                    Library.BR2.From = Vector2.new(BR.X, BR.Y)
-                    Library.BR2.To = Vector2.new(BR.X, BR.Y - offset)
-
-                    Vis(Library, true)
-
-                    if Settings.Autothickness then
-                        local distance = (Player.Character.HumanoidRootPart.Position - oripart.Position).magnitude
-                        local value = math.clamp(1/distance*100, 1, 4) --0.1 is min thickness, 6 is max
-                        for u, x in pairs(Library) do
-                            x.Thickness = value
+                    if Team_Check.TeamCheck then
+                        if plr.TeamColor == player.TeamColor then
+                            Colorize(Team_Check.Green)
+                        else 
+                            Colorize(Team_Check.Red)
                         end
-                    else
-                        for u, x in pairs(Library) do
-                            x.Thickness = Settings.Box_Thickness
-                        end
+                    else 
+                        library.tracer.Color = Settings.Tracer_Color
+                        library.box.Color = Settings.Box_Color
                     end
-                else
-                    Vis(Library, false)
+                    if TeamColor == true then
+                        Colorize(plr.TeamColor.Color)
+                    end
+                    Visibility(true, library)
+                else 
+                    Visibility(false, library)
                 end
-            else
-                Vis(Library, false)
-                if game:GetService("Players"):FindFirstChild(plr.Name) == nil then
-                    for i, v in pairs(Library) do
-                        v:Remove()
-                        oripart:Destroy()
-                    end
-                    c:Disconnect()
+            else 
+                Visibility(false, library)
+                if game.Players:FindFirstChild(plr.Name) == nil then
+                    connection:Disconnect()
                 end
             end
         end)
@@ -147,13 +142,14 @@ local function Main(plr)
     coroutine.wrap(Updater)()
 end
 
--- Draw Boxes
 for i, v in pairs(game:GetService("Players"):GetPlayers()) do
-    if v.Name ~= Player.Name then
-        coroutine.wrap(Main)(v)
+    if v.Name ~= player.Name then
+        coroutine.wrap(ESP)(v)
     end
 end
 
-game:GetService("Players").PlayerAdded:Connect(function(newplr)
-    coroutine.wrap(Main)(newplr)
+game.Players.PlayerAdded:Connect(function(newplr)
+    if newplr.Name ~= player.Name then
+        coroutine.wrap(ESP)(newplr)
+    end
 end)
