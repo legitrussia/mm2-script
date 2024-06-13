@@ -85,6 +85,69 @@ local function ESP(plr)
         local connection
         connection = game:GetService("RunService").RenderStepped:Connect(function()
             if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") ~= nil then
+                local HumPos = Vector2.new(0, 0)
+
+                local function Size(item)
+                    item.PointA = Vector2.new(0, 0)
+                    item.PointB = Vector2.new(0, 0)
+                    item.PointC = Vector2.new(0, 0)
+                    item.PointD = Vector2.new(0, 0)
+                end
+                Size(library.box)
+                Size(library.black)
+
+                --// Health Bar
+                local d = 100 -- tamanho da barra de saúde
+                local healthoffset = plr.Character.Humanoid.Health/plr.Character.Humanoid.MaxHealth * d
+
+                library.greenhealth.From = Vector2.new(-4, 0)
+                library.greenhealth.To = Vector2.new(-4, -healthoffset)
+
+                library.healthbar.From = Vector2.new(-4, 0)
+                library.healthbar.To = Vector2.new(-4, -d)
+
+                local green = Color3.fromRGB(0, 255, 0)
+                local red = Color3.fromRGB(255, 0, 0)
+
+                library.greenhealth.Color = red:lerp(green, plr.Character.Humanoid.Health/plr.Character.Humanoid.MaxHealth);
+
+                if Team_Check.TeamCheck then
+                    if plr.TeamColor == player.TeamColor then
+                        Colorize(Team_Check.Green)
+                    else 
+                        Colorize(Team_Check.Red)
+                    end
+                else 
+                    library.tracer.Color = Settings.Tracer_Color
+                    library.box.Color = Settings.Box_Color
+                end
+                if TeamColor == true then
+                    Colorize(plr.TeamColor.Color)
+                end
+                Visibility(true, library)
+            else 
+                Visibility(false, library)
+                if game.Players:FindFirstChild(plr.Name) == nil then
+                    connection:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(Updater)()
+end
+
+    local function Colorize(color)
+        for u, x in pairs(library) do
+            if x ~= library.healthbar and x ~= library.greenhealth and x ~= library.blacktracer and x ~= library.black then
+                x.Color = color
+            end
+        end
+    end
+
+    local function Updater()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 and plr.Character:FindFirstChild("Head") ~= nil then
                 local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
                 if OnScreen then
                     local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
