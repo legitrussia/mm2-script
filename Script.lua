@@ -400,7 +400,7 @@ end
 UserInputService.InputBegan:Connect(function(Input)
     if Input.UserInputType == Enum.UserInputType.MouseButton2 then
         Holding = true
-    elseif Input.KeyCode == Enum.KeyCode.Insert then
+    elseif Input.KeyCode == Enum.KeyCode.ç then
         toggleMenu()
     end
 end)
